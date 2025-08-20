@@ -12,9 +12,15 @@ This project explores a new way of controlling drones for **emergency search and
 
 ## Getting Started
 
-### 1. Unity (Frontend)
+### 1. Cloning the project
 
+- git clone https://github.com/drone-rescue-sim/drone-sim.git
+- Open cloned project in VSCode
+
+### 2. Unity (Frontend)
+
+- Download Unity from web and follow instructions.
 - Open **Unity Hub** → "Add project" → select `unity-client`.
 - Press Play to start the drone simulation.
 
-### 2. Python Services (Backend)
+### 3. Python Services (Backend)
