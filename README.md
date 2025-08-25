@@ -20,7 +20,7 @@ This project explores a new way of controlling drones for **emergency search and
 ### 2. Unity (Frontend)
 
 - Download Unity from web and follow instructions.
-- Open **Unity Hub** → "Add project" → select `unity-client`.
+- Open **Unity Hub** → "Add project" → select `unity-client/drone-env`.
 - Press Play to start the drone simulation.
 
 ### 3. Python Services (Backend)
