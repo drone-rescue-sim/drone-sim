@@ -4,7 +4,7 @@ import requests  # for HTTP requests
 # Unity HTTP endpoint
 UNITY_URL = "http://127.0.0.1:5005/receive_command"  # Unity must listen at this URL, could use ports or other methods 
 
-def get_drone_instructions(user_input):
+def get_drone_instructions(user_input): 
     """
     Process user input using an LLM to generate drone instructions.
     """
@@ -13,7 +13,7 @@ def get_drone_instructions(user_input):
             model="llama2",  # Or another model of choicé
             messages=[
                 {"role": "system",
-                 "content": "You are a drone control assistant. Translate user instructions into simple drone movement commands (e.g., move_forward, turn_left, ascend, descend)."},
+                 "content": "You are a drone control assistant for Unity. Translate user instructions into simple drone movement commands (e.g., move_forward, turn_left, ascend, descend), and just give the command."},
                  # Could change the system prompt to fit the use case ^
                 {"role": "user", "content": user_input}
             ]
@@ -40,7 +40,6 @@ def send_to_unity(message):
         print(f"Error sending to Unity: {e}")
 
 def main():
-    print("Drone Simulation LLM Service Started (Ollama + HTTP).")
     while True:
         # Get user input
         user_input = input("Enter instructions for the drone: ")
