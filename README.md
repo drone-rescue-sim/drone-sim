@@ -24,3 +24,8 @@ This project explores a new way of controlling drones for **emergency search and
 - Press Play to start the drone simulation.
 
 ### 3. Python Services (Backend)
+
+Install dependencies using pip:
+
+- pip install opencv-python
+- pip install ultralytics
