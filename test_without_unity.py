@@ -1,91 +1,64 @@
 #!/usr/bin/env python3
 """
-Simple test script that works without Unity or Ollama.
-This demonstrates the core functionality of the drone system.
+Drone system test with REAL LLM integration.
+This demonstrates the complete functionality using the actual LLM service.
 """
 
 import json
 import time
+import sys
+import os
 from typing import Dict, Any
 
-class MockLLM:
-    """Mock LLM that simulates the Ollama responses"""
+# Add the project root to Python path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+class RealLLM:
+    """Real LLM that uses the actual Ollama service"""
 
     def __init__(self):
-        self.command_map = {
-            "fly forward": "move_forward",
-            "move forward": "move_forward",
-            "go forward": "move_forward",
-            "forward": "move_forward",
-
-            "fly backward": "move_backward",
-            "move backward": "move_backward",
-            "go backward": "move_backward",
-            "backward": "move_backward",
-
-            "fly left": "move_left",
-            "move left": "move_left",
-            "go left": "move_left",
-            "left": "move_left",
-
-            "fly right": "move_right",
-            "move right": "move_right",
-            "go right": "move_right",
-            "right": "move_right",
-
-            "fly up": "ascend",
-            "go up": "ascend",
-            "ascend": "ascend",
-            "up": "ascend",
-
-            "fly down": "descend",
-            "go down": "descend",
-            "descend": "descend",
-            "down": "descend",
-
-            "turn left": "turn_left",
-            "rotate left": "turn_left",
-
-            "turn right": "turn_right",
-            "rotate right": "turn_right",
-
-            "stop": "stop",
-            "stop moving": "stop",
-            "halt": "stop"
-        }
+        try:
+            from services.llm.main import get_drone_instructions
+            self.get_drone_instructions = get_drone_instructions
+            self.available = True
+            print("✅ Real LLM service loaded successfully")
+        except Exception as e:
+            print(f"❌ Failed to load LLM service: {e}")
+            self.available = False
 
     def process_command(self, user_input: str) -> Dict[str, Any]:
-        """Process user input and return drone command"""
-        input_lower = user_input.lower().strip()
-
-        # Check for compound commands (e.g., "fly up and turn left")
-        if " and " in input_lower:
-            parts = input_lower.split(" and ")
-            commands = []
-            for part in parts:
-                part = part.strip()
-                if part in self.command_map:
-                    commands.append(self.command_map[part])
-
-            if commands:
-                return {
-                    "command": "; ".join(commands),
-                    "details": f"Executing {len(commands)} commands: {', '.join(commands)}"
-                }
-
-        # Single command
-        if input_lower in self.command_map:
-            command = self.command_map[input_lower]
+        """Process user input using the real LLM service"""
+        if not self.available:
             return {
-                "command": command,
-                "details": f"Drone command: {command}"
+                "command": "error",
+                "intensity": 1.0,
+                "details": "LLM service not available"
             }
 
-        # Fallback for unknown commands
-        return {
-            "command": "unknown",
-            "details": f"Unknown command: {user_input}"
-        }
+        try:
+            result = self.get_drone_instructions(user_input)
+
+            # Handle the case where LLM returns a dict directly
+            if isinstance(result, dict):
+                # Ensure intensity is present
+                if 'intensity' not in result:
+                    result['intensity'] = 1.0
+                return result
+
+            # Handle unexpected return types
+            return {
+                "command": "unknown",
+                "intensity": 1.0,
+                "details": f"Unexpected LLM response: {result}"
+            }
+
+        except Exception as e:
+            print(f"❌ LLM Error: {e}")
+            return {
+                "command": "error",
+                "intensity": 1.0,
+                "details": f"LLM processing failed: {str(e)}"
+            }
 
 class MockUnityDrone:
     """Mock Unity drone that simulates drone behavior"""
@@ -100,6 +73,7 @@ class MockUnityDrone:
         """Execute a drone command and return status"""
         command = command_data.get('command', '')
         details = command_data.get('details', '')
+        intensity = command_data.get('intensity', 1.0)
 
         # Split compound commands
         commands = command.split(';')
@@ -107,45 +81,46 @@ class MockUnityDrone:
         responses = []
         for cmd in commands:
             cmd = cmd.strip()
-            response = self._execute_single_command(cmd)
+            response = self._execute_single_command(cmd, intensity)
             responses.append(response)
 
         self.commands_executed.append({
             'timestamp': time.time(),
             'command': command,
+            'intensity': intensity,
             'responses': responses
         })
 
-        return f"Executed: {', '.join(responses)}"
+        return f"Executed: {', '.join(responses)} (intensity: {intensity:.1f}x)"
 
-    def _execute_single_command(self, command: str) -> str:
-        """Execute a single drone command"""
-        speed = 5.0
+    def _execute_single_command(self, command: str, intensity: float = 1.0) -> str:
+        """Execute a single drone command with intensity"""
+        speed = 5.0 * intensity
 
         if command == "move_forward":
             self.velocity[2] += speed
-            return "Moving forward"
+            return f"Moving forward ({intensity:.1f}x)"
         elif command == "move_backward":
             self.velocity[2] -= speed
-            return "Moving backward"
+            return f"Moving backward ({intensity:.1f}x)"
         elif command == "move_left":
             self.velocity[0] -= speed
-            return "Moving left"
+            return f"Moving left ({intensity:.1f}x)"
         elif command == "move_right":
             self.velocity[0] += speed
-            return "Moving right"
+            return f"Moving right ({intensity:.1f}x)"
         elif command == "ascend":
             self.velocity[1] += speed
-            return "Ascending"
+            return f"Ascending ({intensity:.1f}x)"
         elif command == "descend":
             self.velocity[1] -= speed
-            return "Descending"
+            return f"Descending ({intensity:.1f}x)"
         elif command == "turn_left":
-            self.rotation[1] -= 45.0
-            return "Turning left"
+            self.rotation[1] -= 45.0 * intensity
+            return f"Turning left ({intensity:.1f}x)"
         elif command == "turn_right":
-            self.rotation[1] += 45.0
-            return "Turning right"
+            self.rotation[1] += 45.0 * intensity
+            return f"Turning right ({intensity:.1f}x)"
         elif command == "stop":
             self.velocity = [0.0, 0.0, 0.0]
             return "Stopping"
@@ -183,10 +158,10 @@ class MockUnityDrone:
                 self.velocity[1] = 0
 
 class DroneSimulator:
-    """Complete drone simulation system"""
+    """Complete drone simulation system with REAL LLM"""
 
     def __init__(self):
-        self.llm = MockLLM()
+        self.llm = RealLLM()
         self.drone = MockUnityDrone()
         self.running = True
 
@@ -235,17 +210,22 @@ class DroneSimulator:
         print("\n👋 Thanks for flying with our drone simulator!")
 
     def demo_mode(self):
-        """Run a predefined demo"""
-        print("🚁 Drone Simulator - Demo Mode")
+        """Run a predefined demo with intensity examples"""
+        print("🚁 Drone Simulator - Demo Mode (With Intensity)")
         print("-" * 50)
 
         demo_commands = [
             "fly forward",
+            "move very long forward",  # High intensity
             "turn left",
+            "turn very fast left",    # High intensity
             "go up",
+            "fly very long up",       # High intensity
             "move right",
+            "move slowly right",      # Low intensity
             "stop",
             "fly up and turn left",
+            "move very fast forward and turn right",  # Compound with high intensity
             "stop moving"
         ]
 
@@ -254,16 +234,26 @@ class DroneSimulator:
             time.sleep(0.5)  # Brief pause between commands
 
         print("\n🎬 Demo complete!")
+        print("Notice how commands with 'very long', 'very fast', etc.")
+        print("result in higher intensity values and more movement!")
 
 def main():
     """Main function"""
+    print("🚁 Drone Simulation System Test (With REAL LLM + Intensity)")
+    print("=" * 60)
+    print("This test uses the actual Ollama LLM service!")
+    print("Make sure Ollama is running: ollama serve")
+    print("")
+    print("✨ NEW: Intensity support!")
+    print("   Try commands like 'move very long forward', 'turn very fast left'")
+    print("   Or 'move slowly right', 'fly very long up'")
+    print("")
+
     simulator = DroneSimulator()
 
-    print("🚁 Drone Simulation System Test (No Unity/Ollama Required)")
-    print("=" * 60)
     print("Choose mode:")
     print("1. Interactive mode (type your own commands)")
-    print("2. Demo mode (watch predefined commands)")
+    print("2. Demo mode (watch predefined commands with intensity)")
     print("3. Exit")
     print("-" * 60)
 

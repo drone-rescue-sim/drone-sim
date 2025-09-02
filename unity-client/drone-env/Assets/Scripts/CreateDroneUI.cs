@@ -131,6 +131,6 @@ public class CreateDroneUI : MonoBehaviour
         SimpleHTTPServer httpServer = canvasGO.AddComponent<SimpleHTTPServer>();
         httpServer.commandUI = commandUI;
 
-        Debug.Log("Drone UI created! Now assign the drone GameObject to DroneCommandUI.droneObject");
+        Debug.Log("Drone UI created! Now assign a drone with PA_DroneController component to DroneCommandUI.droneObject");
     }
 }

@@ -76,7 +76,7 @@ public class DroneCommandUI : MonoBehaviour
                 {
                     CommandResponse response = JsonUtility.FromJson<CommandResponse>(request.downloadHandler.text);
                     UpdateStatus("Command processed successfully");
-                    ExecuteDroneCommand(response.command);
+                    ExecuteDroneCommand(response.command, response.intensity);
                 }
                 catch (System.Exception e)
                 {
@@ -92,7 +92,7 @@ public class DroneCommandUI : MonoBehaviour
         }
     }
 
-    private void ExecuteDroneCommand(string command)
+    private void ExecuteDroneCommand(string command, float intensity = 1.0f)
     {
         if (droneObject == null) return;
 
@@ -102,7 +102,7 @@ public class DroneCommandUI : MonoBehaviour
             var paDroneController = droneObject.GetComponentInChildren<PA_DronePack.PA_DroneController>();
             if (paDroneController != null)
             {
-                ExecutePADroneCommand(paDroneController, command);
+                ExecutePADroneCommand(paDroneController, command, intensity);
                 return;
             }
         }
@@ -111,36 +111,17 @@ public class DroneCommandUI : MonoBehaviour
             Debug.LogWarning($"PA_DronePack not available: {e.Message}");
         }
 
-        // Fallback: Try to find SimpleDroneController
-        var simpleDrone = droneObject.GetComponent<SimpleDroneController>();
-        if (simpleDrone != null)
-        {
-            ExecuteSimpleDroneCommand(simpleDrone, command);
-            return;
-        }
-
-        UpdateStatus("No compatible drone controller found");
+        UpdateStatus("No compatible drone controller found. Make sure you have a PA_DroneController component.");
     }
 
-    private void ExecuteSimpleDroneCommand(SimpleDroneController controller, string command)
+    private void ExecutePADroneCommand(PA_DronePack.PA_DroneController controller, string command, float intensity = 1.0f)
     {
         // Parse and execute command
         string[] parts = command.ToLower().Split(';');
         foreach (string part in parts)
         {
             string cmd = part.Trim();
-            ExecuteSingleSimpleCommand(controller, cmd);
-        }
-    }
-
-    private void ExecutePADroneCommand(PA_DronePack.PA_DroneController controller, string command)
-    {
-        // Parse and execute command
-        string[] parts = command.ToLower().Split(';');
-        foreach (string part in parts)
-        {
-            string cmd = part.Trim();
-            ExecuteSinglePACommand(controller, cmd);
+            ExecuteSinglePACommand(controller, cmd, intensity);
         }
     }
 
@@ -242,98 +223,49 @@ public class DroneCommandUI : MonoBehaviour
         }
     }
 
-    private void ExecuteSingleSimpleCommand(SimpleDroneController controller, string command)
-    {
-        switch (command)
-        {
-            case "move_forward":
-                controller.MoveForward();
-                UpdateStatus("Moving forward");
-                break;
-            case "move_backward":
-                controller.MoveBackward();
-                UpdateStatus("Moving backward");
-                break;
-            case "move_left":
-                controller.MoveLeft();
-                UpdateStatus("Moving left");
-                break;
-            case "move_right":
-                controller.MoveRight();
-                UpdateStatus("Moving right");
-                break;
-            case "ascend":
-            case "move_up":
-                controller.MoveUp();
-                UpdateStatus("Ascending");
-                break;
-            case "descend":
-            case "move_down":
-                controller.MoveDown();
-                UpdateStatus("Descending");
-                break;
-            case "turn_left":
-                controller.TurnLeft();
-                UpdateStatus("Turning left");
-                break;
-            case "turn_right":
-                controller.TurnRight();
-                UpdateStatus("Turning right");
-                break;
-            case "stop":
-                controller.StopMovement();
-                UpdateStatus("Stopping");
-                break;
-            default:
-                UpdateStatus("Unknown command: " + command);
-                break;
-        }
-    }
-
-    private void ExecuteSinglePACommand(PA_DronePack.PA_DroneController controller, string command)
+    private void ExecuteSinglePACommand(PA_DronePack.PA_DroneController controller, string command, float intensity = 1.0f)
     {
         // Use simulated input to control the professional drone
         float forward = 0f;
         float right = 0f;
         float up = 0f;
         float yaw = 0f;
-        float intensity = 1f; // Default intensity
 
         switch (command)
         {
             case "move_forward":
                 forward = intensity;
-                UpdateStatus("Moving forward");
+                UpdateStatus($"Moving forward (intensity: {intensity:F1}x)");
                 break;
             case "move_backward":
                 forward = -intensity;
-                UpdateStatus("Moving backward");
+                UpdateStatus($"Moving backward (intensity: {intensity:F1}x)");
                 break;
             case "move_left":
                 right = -intensity;
-                UpdateStatus("Moving left");
+                UpdateStatus($"Moving left (intensity: {intensity:F1}x)");
                 break;
             case "move_right":
                 right = intensity;
-                UpdateStatus("Moving right");
+                UpdateStatus($"Moving right (intensity: {intensity:F1}x)");
                 break;
             case "ascend":
             case "move_up":
                 up = intensity;
-                UpdateStatus("Ascending");
+                UpdateStatus($"Ascending (intensity: {intensity:F1}x)");
                 break;
             case "descend":
             case "move_down":
                 up = -intensity;
-                UpdateStatus("Descending");
+                UpdateStatus($"Descending (intensity: {intensity:F1}x)");
                 break;
             case "turn_left":
                 yaw = -intensity;
-                UpdateStatus("Turning left");
+                UpdateStatus($"Turning left (intensity: {intensity:F1}x)");
                 break;
             case "turn_right":
                 yaw = intensity;
-                UpdateStatus("Turning right");
+                UpdateStatus($"Turning right (intensity: {intensity:F1}x)");
                 break;
             case "stop":
                 // Stop all movement by setting all inputs to 0
@@ -365,6 +297,7 @@ public class DroneCommandUI : MonoBehaviour
     private class CommandResponse
     {
         public string command;
+        public float intensity = 1.0f;
         public string details;
     }
 }

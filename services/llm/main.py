@@ -19,16 +19,27 @@ def get_drone_instructions(user_input):
             model="llama2",  # Or another model of choice
             messages=[
                 {"role": "system",
-                 "content": """You are a drone control assistant for Unity. Translate user instructions into simple drone movement commands.
+                 "content": """You are a drone control assistant for Unity. Translate user instructions into simple drone movement commands with intensity modifiers.
                  Always respond with valid JSON in this exact format:
-                 {"command": "single_command", "details": "brief description"}
+                 {"command": "single_command", "intensity": 1.0, "details": "brief description"}
 
                  Available commands: move_forward, move_backward, move_left, move_right, ascend, descend, turn_left, turn_right
 
+                 Intensity levels (1.0 = normal, higher = more intense):
+                 - Normal: 1.0 (e.g., "go forward", "move left")
+                 - Fast/Quick: 1.5-2.0 (e.g., "move very fast forward", "go quickly up")
+                 - Long/Far: 2.0-3.0 (e.g., "move very long forward", "fly far up")
+                 - Slow: 0.5-0.7 (e.g., "move slowly forward", "go gently up")
+
                  Examples:
-                 - "go forward" -> {"command": "move_forward", "details": "Moving drone forward"}
-                 - "fly up and turn left" -> {"command": "ascend; turn_left", "details": "Ascending and turning left"}
-                 - "move to the right" -> {"command": "move_right", "details": "Moving drone to the right"}
+                 - "go forward" -> {"command": "move_forward", "intensity": 1.0, "details": "Moving drone forward"}
+                 - "move very fast forward" -> {"command": "move_forward", "intensity": 2.0, "details": "Moving drone forward quickly"}
+                 - "fly very long up" -> {"command": "ascend", "intensity": 3.0, "details": "Ascending high"}
+                 - "turn left slowly" -> {"command": "turn_left", "intensity": 0.5, "details": "Turning left gently"}
+                 - "fly up and turn left" -> {"command": "ascend; turn_left", "intensity": 1.0, "details": "Ascending and turning left"}
+
+                 For compound commands, use the highest intensity from any part:
+                 - "move very fast forward and turn left" -> {"command": "move_forward; turn_left", "intensity": 2.0, "details": "Moving forward quickly and turning left"}
 
                  Only output the JSON, no additional text."""},
                 {"role": "user", "content": user_input}
@@ -57,6 +68,7 @@ def send_to_unity(command_data):
     try:
         payload = {
             "command": command_data.get("command", ""),
+            "intensity": command_data.get("intensity", 1.0),
             "details": command_data.get("details", "")
         }
         r = requests.post(UNITY_URL, json=payload)

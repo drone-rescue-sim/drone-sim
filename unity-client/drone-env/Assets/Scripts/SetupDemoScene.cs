@@ -47,7 +47,7 @@ public class SetupDemoScene : MonoBehaviour
         Debug.Log("2. Press Play in Unity");
         Debug.Log("3. Press Tab to show command input");
         Debug.Log("4. Type commands like 'fly forward' or 'turn left'");
-        Debug.Log("5. Make sure your drone has PA_DroneController component!");
+        Debug.Log("5. Make sure your drone has PA_DroneController component from the ProfessionalAssets/DronePack!");
     }
 
     private GameObject FindExistingDrone()
