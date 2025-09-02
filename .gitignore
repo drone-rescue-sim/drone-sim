@@ -1,0 +1,87 @@
+# -------------------------
+# OS
+# -------------------------
+.DS_Store
+Thumbs.db
+
+# -------------------------
+# Python
+# -------------------------
+venv/
+.env
+.env.* 
+*.env
+__pycache__/
+*.py[cod]
+*.so
+.mypy_cache/
+.pytype/
+.pyre/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+dist/
+build/
+.eggs/
+*.egg-info/
+pip-wheel-metadata/
+
+# -------------------------
+# Unity (generic)
+# Keep Assets/, Packages/, ProjectSettings/ in git.
+# -------------------------
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+[Cc]rashReports/
+[Aa]ssets/AssetStoreTools*
+*.unityPackage
+
+# Unity IDE/generated
+*.pidb
+*.suo
+*.sln
+*.user
+*.userprefs
+*.csproj
+*.tmp
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# JetBrains / Rider
+.idea/
+*.DotSettings.user
+
+# Visual Studio
+.vs/
+
+# -------------------------
+# VS Code
+# Keep common project JSONs if you use them.
+# -------------------------
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/extensions.json
+
+# -------------------------
+# PlasticSCM
+# -------------------------
+.plastic/
+.gluon/
+PlasticWorkspace*
+
+# -------------------------
+# Logs & misc
+# -------------------------
+*.log
