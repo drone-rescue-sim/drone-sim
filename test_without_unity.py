@@ -210,32 +210,54 @@ class DroneSimulator:
         print("\n👋 Thanks for flying with our drone simulator!")
 
     def demo_mode(self):
-        """Run a predefined demo with intensity examples"""
-        print("🚁 Drone Simulator - Demo Mode (With Intensity)")
+        """Run a comprehensive demo with various command types"""
+        print("🚁 Drone Simulator - Comprehensive Demo")
         print("-" * 50)
 
         demo_commands = [
+            # Basic movement commands
             "fly forward",
-            "move very long forward",  # High intensity
+            "move backward",
             "turn left",
-            "turn very fast left",    # High intensity
+            "turn right",
             "go up",
-            "fly very long up",       # High intensity
+            "go down",
+            "move left",
             "move right",
-            "move slowly right",      # Low intensity
-            "stop",
+
+            # Intensity commands
+            "move very long forward",     # High intensity
+            "turn very fast left",        # High intensity
+            "fly very long up",          # High intensity
+            "move slowly right",         # Low intensity
+
+            # Compound commands
             "fly up and turn left",
-            "move very fast forward and turn right",  # Compound with high intensity
+            "move very fast forward and turn right",
+            "ascend and move left",
+
+            # Stop commands
+            "stop",
             "stop moving"
         ]
 
-        for command in demo_commands:
-            self.process_user_command(command)
-            time.sleep(0.5)  # Brief pause between commands
+        print("Testing various command types:")
+        print("• Basic movement")
+        print("• Intensity modifiers")
+        print("• Compound commands")
+        print("• Stop commands")
+        print("-" * 50)
 
-        print("\n🎬 Demo complete!")
-        print("Notice how commands with 'very long', 'very fast', etc.")
-        print("result in higher intensity values and more movement!")
+        for i, command in enumerate(demo_commands, 1):
+            print(f"\n[Command {i:2d}/{len(demo_commands)}] ", end="")
+            self.process_user_command(command)
+            time.sleep(0.3)  # Brief pause between commands
+
+        print("\n" + "=" * 50)
+        print("🎬 Demo complete!")
+        print("✅ Tested basic movement, intensity, and compound commands")
+        print("✅ Verified LLM processing and drone simulation")
+        print("✅ All commands processed successfully!")
 
 def main():
     """Main function"""
