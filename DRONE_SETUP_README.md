@@ -82,7 +82,15 @@ ollama pull llama2  # Download the model
    - Find the "DroneCommandCanvas" GameObject
    - In the `DroneCommandUI` component, assign the drone GameObject to the "Drone Object" field
 
-5. **Add Professional Drone**:
+5. **Add Custom Drone (Recommended)**:
+   - Create an empty GameObject called "DroneCreator"
+   - Add the `CreateDrone.cs` script to it
+   - Right-click the script in Inspector → "Create Drone with Custom Controller"
+   - This creates a complete drone with your custom `DroneController`
+   - The drone includes visual tilt effects and proper physics
+   - Controls: WASD (move), Space (up), LeftShift (down), Q/E (rotate)
+
+6. **Alternative: Use Professional Drone**:
    - From the menu: Assets → ProfessionalAssets → DronePack → Prefabs
    - Drag one of the drone prefabs (_Drone [Quad].prefab recommended) into the scene
    - Position it appropriately (recommended: y = 2 for starting height)
@@ -124,6 +132,41 @@ The system supports these basic movement commands:
 - **Vertical**: `ascend`, `descend`, `move_up`, `move_down`
 - **Rotation**: `turn_left`, `turn_right`
 - **Control**: `stop` (stops all movement)
+
+### Drone Controller Types
+
+The system supports two types of drone controllers:
+
+#### **1. Custom DroneController (Recommended)**
+- **Location**: `Assets/Scripts/DroneController.cs`
+- **Features**:
+  - Unity's New Input System
+  - WASD/Arrows for movement
+  - Space for ascend, LeftShift for descend
+  - Q/E for rotation
+  - Visual tilt effects
+  - Gamepad support
+  - Physics-based movement
+
+#### **2. PA_DroneController (Professional Assets)**
+- **Location**: ProfessionalAssets/DronePack
+- **Features**:
+  - Advanced drone physics
+  - Multiple drone types (Quad, Bumblebee, UFO, etc.)
+  - Built-in animations and effects
+  - More realistic flight characteristics
+
+### Creating a Drone
+
+#### **Option A: Custom Drone (Easiest)**
+1. Create empty GameObject → Add `CreateDrone.cs`
+2. Right-click script → "Create Drone with Custom Controller"
+3. Done! The drone is ready with all components
+
+#### **Option B: Professional Drone**
+1. Assets → ProfessionalAssets → DronePack → Prefabs
+2. Drag `_Drone [Quad].prefab` into scene
+3. Position at (0, 2, 0)
 
 ### Natural Language Examples
 
