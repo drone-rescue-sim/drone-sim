@@ -33,7 +33,7 @@ public class CommandInputUI : MonoBehaviour
 
     private bool isVisible = false;
     private InputAction toggleAction;
-    private static readonly HttpClient httpClient = new HttpClient();
+    private static readonly HttpClient textHttpClient = new HttpClient();
     private const string LLM_SERVICE_URL = "http://127.0.0.1:5006/process_command";
 
     // Voice recording variables
@@ -232,9 +232,11 @@ public class CommandInputUI : MonoBehaviour
 
             Debug.Log("Sending audio to Whisper service for transcription...");
 
-            // Increase timeout for Whisper processing (5 minutes for model download)
-            httpClient.Timeout = TimeSpan.FromMinutes(6);
-            HttpResponseMessage response = await httpClient.PostAsync(whisperServiceUrl, content);
+            // Create a new HttpClient instance for audio processing with extended timeout
+            using (var audioHttpClient = new HttpClient())
+            {
+                audioHttpClient.Timeout = TimeSpan.FromMinutes(6);
+                HttpResponseMessage response = await audioHttpClient.PostAsync(whisperServiceUrl, content);
 
             if (response.IsSuccessStatusCode)
             {
@@ -271,6 +273,7 @@ public class CommandInputUI : MonoBehaviour
                 string errorContent = await response.Content.ReadAsStringAsync();
                 Debug.LogError($"Whisper service error: {errorContent}");
             }
+            } // Close using block for audioHttpClient
         }
         catch (System.Exception e)
         {
@@ -329,7 +332,7 @@ public class CommandInputUI : MonoBehaviour
             string jsonPayload = JsonUtility.ToJson(payload);
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
 
-            HttpResponseMessage response = await httpClient.PostAsync(LLM_SERVICE_URL, content);
+            HttpResponseMessage response = await textHttpClient.PostAsync(LLM_SERVICE_URL, content);
 
             if (response.IsSuccessStatusCode)
             {
