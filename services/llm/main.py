@@ -2,7 +2,7 @@ import ollama
 import requests  # for HTTP requests
 
 # Unity HTTP endpoint
-UNITY_URL = "http://127.0.0.1:5005/receive_command"  # Unity must listen at this URL, could use ports or other methods 
+UNITY_URL = "http://127.0.0.1:5005/"  # Unity listens on this endpoint 
 
 def get_drone_instructions(user_input):
     """
