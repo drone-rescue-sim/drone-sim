@@ -7,6 +7,12 @@ using System.Threading;
 using System.Text;
 using System.Collections.Generic;
 
+/// <summary>
+/// Controls drone movement and handles natural language commands from LLM service.
+/// Manual input: ONLY arrow keys (↑↓←→) for movement.
+/// LLM commands support: move_forward/backward/left/right, ascend/descend, turn_left/right.
+/// Runs an HTTP server on port 5005 to receive commands from the LLM service.
+/// </summary>
 [RequireComponent(typeof(Rigidbody))]
 public class DroneController : MonoBehaviour
 {
@@ -25,11 +31,11 @@ public class DroneController : MonoBehaviour
     private Vector3 velTarget;
 
     // New Input System actions
-    private InputAction moveAction;     // WASD/Arrows or gamepad left stick (Vector2)
-    private InputAction ascendPos;      // Space = +1
-    private InputAction ascendNeg;      // LeftShift = -1
-    private InputAction yawLeft;        // Q
-    private InputAction yawRight;       // E
+    private InputAction moveAction;     // ONLY Arrow keys or gamepad left stick (Vector2)
+    // private InputAction ascendPos;      // DISABLED - Space = +1
+    // private InputAction ascendNeg;      // DISABLED - LeftShift = -1
+    // private InputAction yawLeft;        // DISABLED - Q
+    // private InputAction yawRight;       // DISABLED - E
 
     // LLM Command handling
     private HttpListener listener;
@@ -44,34 +50,34 @@ public class DroneController : MonoBehaviour
 
     // Command duration tracking
     private Dictionary<string, float> commandDurations = new Dictionary<string, float>();
-    private float commandTimeout = 1.0f; // seconds
+    private float commandTimeout = 2.0f; // seconds - increased for better control
+    private Queue<string> commandQueue = new Queue<string>(); // Thread-safe command queue
 
     void OnEnable()
     {
-        // Move (WASD/arrows + gamepad stick)
+        // Move (only arrow keys + gamepad stick)
         moveAction = new InputAction("Move", binding: "<Gamepad>/leftStick");
         moveAction.AddCompositeBinding("2DVector")
-            .With("Up", "<Keyboard>/w").With("Up", "<Keyboard>/upArrow")
-            .With("Down", "<Keyboard>/s").With("Down", "<Keyboard>/downArrow")
-            .With("Left", "<Keyboard>/a").With("Left", "<Keyboard>/leftArrow")
-            .With("Right", "<Keyboard>/d").With("Right", "<Keyboard>/rightArrow");
+            .With("Up", "<Keyboard>/upArrow")
+            .With("Down", "<Keyboard>/downArrow")
+            .With("Left", "<Keyboard>/leftArrow")
+            .With("Right", "<Keyboard>/rightArrow");
         moveAction.Enable();
 
-        // Ascend / Descend (Space / LeftShift)
-        ascendPos = new InputAction("AscendPos", binding: "<Keyboard>/space");
-        ascendNeg = new InputAction("AscendNeg", binding: "<Keyboard>/leftShift");
-        ascendPos.Enable(); ascendNeg.Enable();
+        // Ascend / Descend DISABLED - only LLM commands for vertical movement
+        // ascendPos = new InputAction("AscendPos", binding: "<Keyboard>/space");
+        // ascendNeg = new InputAction("AscendNeg", binding: "<Keyboard>/leftShift");
 
-        // Yaw (Q/E)
-        yawLeft  = new InputAction("YawLeft",  binding: "<Keyboard>/q");
-        yawRight = new InputAction("YawRight", binding: "<Keyboard>/e");
-        yawLeft.Enable(); yawRight.Enable();
+        // Yaw DISABLED - only LLM commands for rotation
+        // yawLeft  = new InputAction("YawLeft",  binding: "<Keyboard>/q");
+        // yawRight = new InputAction("YawRight", binding: "<Keyboard>/e");
     }
 
     void OnDisable()
     {
-        moveAction?.Disable(); ascendPos?.Disable(); ascendNeg?.Disable();
-        yawLeft?.Disable(); yawRight?.Disable();
+        moveAction?.Disable();
+        // ascendPos?.Disable(); ascendNeg?.Disable();
+        // yawLeft?.Disable(); yawRight?.Disable();
     }
 
     void Start()
@@ -91,13 +97,21 @@ public class DroneController : MonoBehaviour
 
     void FixedUpdate()
     {
+        // Process commands from the queue (thread-safe)
+        while (commandQueue.Count > 0)
+        {
+            string command = commandQueue.Dequeue();
+            ProcessCommand(command);
+        }
+
         // Update command durations and reset expired commands
         UpdateCommandDurations();
 
         Vector2 mv = moveAction.ReadValue<Vector2>();
-        float upDown = (ascendPos.IsPressed() ? 1f : 0f) + (ascendNeg.IsPressed() ? -1f : 0f);
+        // Manual ascend/descend DISABLED - only LLM commands control vertical movement
+        float upDown = 0f; // Space/Shift keys disabled
 
-        // Combine manual and LLM inputs
+        // Combine manual (arrow keys only) and LLM inputs
         float totalForward = Mathf.Clamp(mv.y + llmMoveForward, -1f, 1f);
         float totalRight = Mathf.Clamp(mv.x + llmMoveRight, -1f, 1f);
         float totalUpDown = Mathf.Clamp(upDown + llmAscend, -1f, 1f);
@@ -108,7 +122,8 @@ public class DroneController : MonoBehaviour
 
         rb.linearVelocity = Vector3.Lerp(rb.linearVelocity, velTarget, Time.fixedDeltaTime * accel);
 
-        float manualYaw = (yawLeft.IsPressed() ? -1f : 0f) + (yawRight.IsPressed() ? 1f : 0f);
+        // Manual yaw DISABLED - only LLM commands control rotation
+        float manualYaw = 0f; // Q/E keys disabled
         float totalYaw = Mathf.Clamp(manualYaw + llmYaw, -1f, 1f);
 
         if (Mathf.Abs(totalYaw) > 0.01f)
@@ -123,7 +138,10 @@ public class DroneController : MonoBehaviour
         }
     }
 
-    // HTTP Server Methods
+    /// <summary>
+    /// Starts the HTTP server to listen for commands from the LLM service.
+    /// Runs on port 5005 and processes incoming drone movement commands.
+    /// </summary>
     private void StartHttpServer()
     {
         try
@@ -197,7 +215,11 @@ public class DroneController : MonoBehaviour
                     var commandData = JsonUtility.FromJson<CommandData>(body);
                     if (commandData != null && !string.IsNullOrEmpty(commandData.command))
                     {
-                        ProcessCommand(commandData.command);
+                        // Add command to queue for processing on main thread
+                        lock (commandQueue)
+                        {
+                            commandQueue.Enqueue(commandData.command);
+                        }
                     }
                 }
             }
@@ -219,19 +241,17 @@ public class DroneController : MonoBehaviour
         }
     }
 
-    // Command Processing
+    /// <summary>
+    /// Processes a natural language command and converts it to drone movement inputs.
+    /// Supports multiple simultaneous commands for complex maneuvers.
+    /// </summary>
+    /// <param name="command">The command string from the LLM service</param>
     private void ProcessCommand(string command)
     {
         string lowerCommand = command.ToLower().Trim();
         Debug.Log($"Processing command: {lowerCommand}");
 
-        // Reset all LLM inputs
-        llmMoveForward = 0f;
-        llmMoveRight = 0f;
-        llmAscend = 0f;
-        llmYaw = 0f;
-
-        // Parse command
+        // Parse command - don't reset other commands, allow multiple simultaneous commands
         switch (lowerCommand)
         {
             case "move_forward":
@@ -270,6 +290,11 @@ public class DroneController : MonoBehaviour
                 break;
             case "stop":
                 // Reset all movements
+                llmMoveForward = 0f;
+                llmMoveRight = 0f;
+                llmAscend = 0f;
+                llmYaw = 0f;
+                commandDurations.Clear();
                 break;
             default:
                 Debug.LogWarning($"Unknown command: {lowerCommand}");
@@ -324,6 +349,20 @@ public class DroneController : MonoBehaviour
                 llmYaw = 0f;
                 break;
         }
+    }
+
+    /// <summary>
+    /// Public method to stop all drone movement commands.
+    /// Can be called from UI buttons or other components to emergency stop the drone.
+    /// </summary>
+    public void StopAllCommands()
+    {
+        llmMoveForward = 0f;
+        llmMoveRight = 0f;
+        llmAscend = 0f;
+        llmYaw = 0f;
+        commandDurations.Clear();
+        Debug.Log("All drone commands stopped");
     }
 
     // Data class for JSON parsing
