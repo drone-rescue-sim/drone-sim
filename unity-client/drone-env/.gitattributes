@@ -1,0 +1,27 @@
+# Normalize line endings
+* text=auto
+
+# Treat Unity asset files as binary
+*.unity binary
+*.prefab binary
+*.asset binary
+*.mat binary
+*.fbx binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.psd binary
+*.tga binary
+*.anim binary
+*.controller binary
+*.ttf binary
+*.otf binary
+*.wav binary
+*.mp3 binary
+*.ogg binary
+*.mp4 binary
+
+# Scripts are text and should diff/merge cleanly
+*.cs text diff=csharp
+*.shader text
+*.compute text
