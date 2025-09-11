@@ -14,5 +14,11 @@ if [ -f "venv/bin/activate" ]; then
     echo "✅ Virtual environment activated"
 fi
 
-# Start the HTTP service
-python services/llm/http_service.py
+# Start the HTTP service with anaconda Python (has all dependencies)
+PYTHON_PATH="/Users/jacob/anaconda3/bin/python"
+if [ -f "$PYTHON_PATH" ]; then
+    $PYTHON_PATH services/llm/http_service.py
+else
+    echo "Anaconda Python not found at $PYTHON_PATH, trying system Python..."
+    python services/llm/http_service.py
+fi
