@@ -213,12 +213,31 @@ public class DroneController : MonoBehaviour
 
                     // Parse JSON command
                     var commandData = JsonUtility.FromJson<CommandData>(body);
-                    if (commandData != null && !string.IsNullOrEmpty(commandData.command))
+                    if (commandData != null)
                     {
-                        // Add command to queue for processing on main thread
-                        lock (commandQueue)
+                        // Handle multiple commands (new format)
+                        if (commandData.commands != null && commandData.commands.Length > 0)
                         {
-                            commandQueue.Enqueue(commandData.command);
+                            Debug.Log($"Received {commandData.commands.Length} commands: {string.Join(", ", commandData.commands)}");
+                            lock (commandQueue)
+                            {
+                                foreach (string cmd in commandData.commands)
+                                {
+                                    if (!string.IsNullOrEmpty(cmd))
+                                    {
+                                        commandQueue.Enqueue(cmd.Trim().ToLower());
+                                    }
+                                }
+                            }
+                        }
+                        // Handle single command (backward compatibility)
+                        else if (!string.IsNullOrEmpty(commandData.command))
+                        {
+                            Debug.Log($"Received single command: {commandData.command}");
+                            lock (commandQueue)
+                            {
+                                commandQueue.Enqueue(commandData.command.Trim().ToLower());
+                            }
                         }
                     }
                 }
@@ -365,10 +384,11 @@ public class DroneController : MonoBehaviour
         Debug.Log("All drone commands stopped");
     }
 
-    // Data class for JSON parsing
+    // Data class for JSON parsing - now supports multiple commands
     [System.Serializable]
     private class CommandData
     {
-        public string command;
+        public string command;        // Single command (backward compatibility)
+        public string[] commands;     // Multiple commands (new format)
     }
 }

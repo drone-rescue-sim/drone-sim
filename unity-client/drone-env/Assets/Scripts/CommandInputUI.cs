@@ -30,11 +30,13 @@ public class CommandInputUI : MonoBehaviour
     public Button sendButton;
     public Button closeButton;
     public Button micButton;
+    public TMP_Text statusText;
 
     private bool isVisible = false;
+    private bool isProcessingCommand = false;
     private InputAction toggleAction;
-    private static readonly HttpClient textHttpClient = new HttpClient();
     private const string LLM_SERVICE_URL = "http://127.0.0.1:5006/process_command";
+    private const int LLM_TIMEOUT_SECONDS = 30; 
 
     // Voice recording variables
     private bool isRecording = false;
@@ -121,6 +123,25 @@ public class CommandInputUI : MonoBehaviour
         }
     }
 
+    private void ShowLoadingStatus(string message)
+    {
+        if (statusText != null)
+        {
+            statusText.text = message;
+            statusText.gameObject.SetActive(true);
+        }
+        Debug.Log(message);
+    }
+
+    private void HideLoadingStatus()
+    {
+        if (statusText != null)
+        {
+            statusText.gameObject.SetActive(false);
+        }
+        isProcessingCommand = false;
+    }
+
     public void SendCommand()
     {
         if (commandInput == null || string.IsNullOrEmpty(commandInput.text))
@@ -128,9 +149,19 @@ public class CommandInputUI : MonoBehaviour
             return;
         }
 
+        if (isProcessingCommand)
+        {
+            Debug.Log("Already processing a command, please wait...");
+            return;
+        }
+
         string command = commandInput.text.Trim();
         commandInput.text = "";
         HideUI();
+
+        // Show loading status
+        ShowLoadingStatus($"Processing: '{command}'...");
+        isProcessingCommand = true;
 
         _ = SendToLLMServiceAsync(command);
     }
@@ -243,11 +274,11 @@ public class CommandInputUI : MonoBehaviour
                 string responseContent = await response.Content.ReadAsStringAsync();
                 Debug.Log($"Whisper service response: {responseContent}");
 
-                // Parse the response to get the transcribed command
+                // Parse the response to get the transcribed commands
                 var whisperResponse = JsonUtility.FromJson<WhisperResponse>(responseContent);
                 if (whisperResponse != null && !string.IsNullOrEmpty(whisperResponse.transcript))
                 {
-                    Debug.Log($"Transcribed command: {whisperResponse.transcript}");
+                    Debug.Log($"Transcribed: {whisperResponse.transcript}");
 
                     // Show the transcribed text in the input field
                     if (commandInput != null)
@@ -256,10 +287,10 @@ public class CommandInputUI : MonoBehaviour
                         commandInput.ActivateInputField();
                     }
 
-                    // Auto-send the command if transcription confidence is high
+                    // Auto-send the commands if transcription confidence is high
                     if (whisperResponse.confidence > 0.8f)
                     {
-                        Debug.Log("High confidence transcription, auto-sending command...");
+                        Debug.Log("High confidence transcription, auto-sending commands...");
                         SendCommand();
                     }
                     else
@@ -332,22 +363,55 @@ public class CommandInputUI : MonoBehaviour
             string jsonPayload = JsonUtility.ToJson(payload);
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
 
-            HttpResponseMessage response = await textHttpClient.PostAsync(LLM_SERVICE_URL, content);
+            // Create HttpClient with timeout
+            using (var httpClient = new HttpClient())
+            {
+                httpClient.Timeout = TimeSpan.FromSeconds(LLM_TIMEOUT_SECONDS);
 
-            if (response.IsSuccessStatusCode)
-            {
-                string responseContent = await response.Content.ReadAsStringAsync();
-                Debug.Log($"LLM service responded: {responseContent}");
+                HttpResponseMessage response = await httpClient.PostAsync(LLM_SERVICE_URL, content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseContent = await response.Content.ReadAsStringAsync();
+                    Debug.Log($"LLM service responded: {responseContent}");
+
+                    // Parse the response to get the commands
+                    var llmResponse = JsonUtility.FromJson<LLMResponse>(responseContent);
+                    if (llmResponse != null && llmResponse.commands != null && llmResponse.commands.Length > 0)
+                    {
+                        string commandText = llmResponse.commands.Length == 1 ?
+                            $"✅ Command processed: {llmResponse.commands[0]}" :
+                            $"✅ Commands processed: {string.Join(", ", llmResponse.commands)}";
+                        ShowLoadingStatus(commandText);
+                    }
+                    else
+                    {
+                        ShowLoadingStatus("✅ Command processed successfully!");
+                    }
+                }
+                else
+                {
+                    string errorContent = await response.Content.ReadAsStringAsync();
+                    Debug.LogError($"LLM service error: {errorContent}");
+                    ShowLoadingStatus("❌ Failed to process command");
+                }
             }
-            else
-            {
-                string errorContent = await response.Content.ReadAsStringAsync();
-                Debug.LogError($"LLM service error: {errorContent}");
-            }
+        }
+        catch (System.Threading.Tasks.TaskCanceledException)
+        {
+            Debug.LogError($"LLM service timeout after {LLM_TIMEOUT_SECONDS} seconds. Complex commands may take longer to process.");
+            ShowLoadingStatus($"⏰ Timeout after {LLM_TIMEOUT_SECONDS}s");
         }
         catch (System.Exception e)
         {
             Debug.LogError($"Failed to send command: {e.Message}");
+            ShowLoadingStatus("❌ Connection error");
+        }
+        finally
+        {
+            // Hide loading status after a short delay
+            await Task.Delay(2000); // Show status for 2 seconds
+            HideLoadingStatus();
         }
     }
 
@@ -362,5 +426,13 @@ public class CommandInputUI : MonoBehaviour
     {
         public string transcript;
         public float confidence;
+        public string[] commands;
+    }
+
+    [System.Serializable]
+    private class LLMResponse
+    {
+        public string status;
+        public string[] commands;
     }
 }

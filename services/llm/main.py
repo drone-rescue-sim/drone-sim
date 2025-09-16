@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+"""
+Drone LLM Main Service
+Process natural language commands for drone control
+"""
+
 import ollama
 import requests  # for HTTP requests
 
@@ -24,10 +30,11 @@ Available commands:
 - stop: Stop all movement
 
 Instructions:
-1. Respond with ONLY the command name, nothing else
-2. Use exactly the command names listed above
-3. If the user gives a complex instruction, break it down to the most important single command
-4. If unsure, respond with "stop"
+1. If the user gives a single command, respond with just that command name
+2. If the user gives multiple commands (like "fly forward and go up"), respond with a comma-separated list of commands
+3. Use exactly the command names listed above
+4. If unsure about any part, skip that part or use "stop" for unclear sections
+5. Respond with ONLY command names separated by commas, nothing else
 
 Examples:
 User: "fly forward" -> move_forward
@@ -35,8 +42,13 @@ User: "go up in the air" -> ascend
 User: "turn around" -> turn_left
 User: "move to the right" -> move_right
 User: "hover in place" -> stop
+User: "fly forward and go up" -> move_forward,ascend
+User: "move left then stop" -> move_left,stop
+User: "turn right and move forward" -> turn_right,move_forward
+User: "go up, turn left, and then stop" -> ascend,turn_left,stop
 """
 
+        print(f"🧠 Processing with LLM: '{user_input}'")
         response = ollama.chat(
             model="llama2",
             messages=[
@@ -47,50 +59,92 @@ User: "hover in place" -> stop
         instructions = response['message']['content']
 
         # Clean and validate the response
-        command = instructions.strip().lower()
+        response_text = instructions.strip().lower()
 
-        # Validate command
+        # Validate commands (handle both single and multiple commands)
         valid_commands = [
             "move_forward", "move_backward", "move_left", "move_right",
             "ascend", "go_up", "descend", "go_down",
             "turn_left", "turn_right", "stop"
         ]
 
-        if command in valid_commands:
-            return command
+        # Split by comma and clean up
+        command_list = [cmd.strip() for cmd in response_text.split(',') if cmd.strip()]
+
+        # Validate each command
+        validated_commands = []
+        for cmd in command_list:
+            if cmd in valid_commands:
+                validated_commands.append(cmd)
+            else:
+                print(f"Invalid command generated: {cmd}, skipping")
+                # Don't add invalid commands
+
+        # Return list of validated commands, or ['stop'] if none are valid
+        if validated_commands:
+            print(f"📋 Generated commands: {validated_commands}")
+            return validated_commands
         else:
-            print(f"Invalid command generated: {command}, using 'stop' instead")
-            return "stop"
+            print(f"No valid commands generated from: {response_text}, using ['stop'] instead")
+            return ["stop"]
 
     except Exception as e:
         print(f"Error generating instructions: {e}")
-        return "stop"
+        return ["stop"]
 
 def send_to_unity(command):
     """
     Send the processed instructions to Unity via HTTP POST.
+    Now supports both single commands and lists of commands.
     """
     try:
-        payload = {"command": command}
-        headers = {"Content-Type": "application/json"}
-
-        r = requests.post(UNITY_URL, json=payload, headers=headers, timeout=5.0)
-
-        if r.status_code == 200:
-            print(f"✓ Sent command to Unity: {command}")
-            return True
+        # Handle both single command and list of commands
+        if isinstance(command, list):
+            return send_multiple_commands_to_unity(command)
         else:
-            print(f"✗ Unity responded with status code {r.status_code}: {r.text}")
-            return False
-    except requests.exceptions.ConnectionError:
-        print("✗ Cannot connect to Unity. Make sure Unity is running and the HTTP server is started.")
-        return False
-    except requests.exceptions.Timeout:
-        print("✗ Request to Unity timed out.")
-        return False
+            # Single command - wrap in list for consistency
+            return send_multiple_commands_to_unity([command])
     except Exception as e:
         print(f"✗ Error sending to Unity: {e}")
         return False
+
+def send_multiple_commands_to_unity(commands):
+    """
+    Send multiple commands to Unity with delays between each command.
+    """
+    import time
+
+    success_count = 0
+    for i, command in enumerate(commands):
+        try:
+            payload = {"command": command}
+            headers = {"Content-Type": "application/json"}
+
+            r = requests.post(UNITY_URL, json=payload, headers=headers, timeout=5.0)
+
+            if r.status_code == 200:
+                print(f"✓ Sent command {i+1}/{len(commands)} to Unity: {command}")
+                success_count += 1
+            else:
+                print(f"✗ Command {i+1} failed - Unity responded with status code {r.status_code}: {r.text}")
+                return False
+
+            # Add delay between commands (except for the last one)
+            if i < len(commands) - 1:
+                time.sleep(0.5)  # 500ms delay between commands
+
+        except requests.exceptions.ConnectionError:
+            print("✗ Cannot connect to Unity. Make sure Unity is running and the HTTP server is started.")
+            return False
+        except requests.exceptions.Timeout:
+            print("✗ Request to Unity timed out.")
+            return False
+        except Exception as e:
+            print(f"✗ Error sending command {i+1} to Unity: {e}")
+            return False
+
+    print(f"✅ Successfully sent {success_count}/{len(commands)} commands to Unity")
+    return True
 
 def main():
     print("🤖 Drone Control LLM Service Started")
@@ -112,16 +166,16 @@ def main():
 
             # Process input with LLM
             print("🧠 Processing with LLM...")
-            command = get_drone_instructions(user_input)
+            commands = get_drone_instructions(user_input)
 
-            if command:
-                print(f"📤 Sending command: {command}")
+            if commands and len(commands) > 0:
+                print(f"📤 Sending commands: {commands}")
                 # Send instructions to Unity
-                success = send_to_unity(command)
+                success = send_to_unity(commands)
                 if not success:
                     print("💡 Tip: Make sure Unity is running with the drone scene active")
             else:
-                print("❌ Failed to generate valid command")
+                print("❌ Failed to generate valid commands")
 
         except KeyboardInterrupt:
             print("\n👋 Interrupted by user. Exiting...")

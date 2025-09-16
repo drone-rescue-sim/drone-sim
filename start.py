@@ -2,6 +2,7 @@
 """
 Drone Simulation Services Startup Script
 Starts both LLM service and Whisper integration for voice control
+Compatible with Windows and macOS
 """
 
 import subprocess

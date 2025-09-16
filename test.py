@@ -2,6 +2,7 @@
 """
 Comprehensive test suite for Drone Simulation System
 Tests Unity integration, LLM processing, and Whisper voice recognition
+Compatible with Windows and macOS
 """
 
 import sys
@@ -145,13 +146,13 @@ class DroneSystemTester:
 
                 if response.status_code == 200:
                     result = response.json()
-                    processed_cmd = result.get('processed_command', '')
-                    if processed_cmd == expected_output:
-                        self.log_test(f"Text: '{input_cmd}'", True, f"→ {processed_cmd}")
+                    command = result.get('command', '')
+                    if command == expected_output:
+                        self.log_test(f"Text: '{input_cmd}'", True, f"→ {command}")
                         success_count += 1
                     else:
                         self.log_test(f"Text: '{input_cmd}'", False,
-                                    f"Expected: {expected_output}, Got: {processed_cmd}")
+                                    f"Expected: {expected_output}, Got: {command}")
                 else:
                     self.log_test(f"Text: '{input_cmd}'", False,
                                 f"HTTP {response.status_code}: {response.text}")
