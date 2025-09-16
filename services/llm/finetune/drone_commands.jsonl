@@ -1,0 +1,491 @@
+{"prompt": "fly forward", "completion": "move_forward"}
+{"prompt": "go forward", "completion": "move_forward"}
+{"prompt": "move ahead", "completion": "move_forward"}
+{"prompt": "move backward", "completion": "move_backward"}
+{"prompt": "fly back", "completion": "move_backward"}
+{"prompt": "go backward", "completion": "move_backward"}
+{"prompt": "move left", "completion": "move_left"}
+{"prompt": "go left", "completion": "move_left"}
+{"prompt": "fly to the left", "completion": "move_left"}
+{"prompt": "move right", "completion": "move_right"}
+{"prompt": "go right", "completion": "move_right"}
+{"prompt": "fly to the right", "completion": "move_right"}
+{"prompt": "ascend", "completion": "ascend"}
+{"prompt": "go up", "completion": "ascend"}
+{"prompt": "rise", "completion": "ascend"}
+{"prompt": "descend", "completion": "descend"}
+{"prompt": "go down", "completion": "descend"}
+{"prompt": "drop down", "completion": "descend"}
+{"prompt": "turn left", "completion": "turn_left"}
+{"prompt": "rotate left", "completion": "turn_left"}
+{"prompt": "spin left", "completion": "turn_left"}
+{"prompt": "turn right", "completion": "turn_right"}
+{"prompt": "rotate right", "completion": "turn_right"}
+{"prompt": "spin right", "completion": "turn_right"}
+{"prompt": "stop", "completion": "stop"}
+{"prompt": "hover", "completion": "stop"}
+{"prompt": "stay in place", "completion": "stop"}
+{"prompt": "turn around", "completion": "turn_left"}
+{"prompt": "flip forward", "completion": "move_forward"}
+{"prompt": "flip backward", "completion": "move_backward"}
+{"prompt": "fly higher", "completion": "ascend"}
+{"prompt": "fly lower", "completion": "descend"}
+{"prompt": "rotate 180 degrees", "completion": "turn_left"}
+{"prompt": "halt", "completion": "stop"}
+{"prompt": "move forward a bit", "completion": "move_forward"}
+{"prompt": "propel forward", "completion": "move_forward"}
+{"prompt": "full thrust forward", "completion": "move_forward"}
+{"prompt": "creep ahead", "completion": "move_forward"}
+{"prompt": "retreat", "completion": "move_backward"}
+{"prompt": "pull back", "completion": "move_backward"}
+{"prompt": "reverse", "completion": "move_backward"}
+{"prompt": "slide left", "completion": "move_left"}
+{"prompt": "strafe left", "completion": "move_left"}
+{"prompt": "drift to the left", "completion": "move_left"}
+{"prompt": "slide right", "completion": "move_right"}
+{"prompt": "strafe right", "completion": "move_right"}
+{"prompt": "drift to the right", "completion": "move_right"}
+{"prompt": "climb higher", "completion": "ascend"}
+{"prompt": "gain altitude", "completion": "ascend"}
+{"prompt": "take off", "completion": "ascend"}
+{"prompt": "drop lower", "completion": "descend"}
+{"prompt": "lose altitude", "completion": "descend"}
+{"prompt": "land", "completion": "descend"}
+{"prompt": "spin counter-clockwise", "completion": "turn_left"}
+{"prompt": "pivot left", "completion": "turn_left"}
+{"prompt": "veer left", "completion": "turn_left"}
+{"prompt": "spin clockwise", "completion": "turn_right"}
+{"prompt": "pivot right", "completion": "turn_right"}
+{"prompt": "veer right", "completion": "turn_right"}
+{"prompt": "freeze", "completion": "stop"}
+{"prompt": "pause", "completion": "stop"}
+{"prompt": "don't move", "completion": "stop"}
+{"prompt": "stay put", "completion": "stop"}
+{"prompt": "fly up and forward", "completion": "ascend"}
+{"prompt": "go down then turn right", "completion": "descend"}
+{"prompt": "turn right and then stop", "completion": "turn_right"}
+{"prompt": "can you go up please", "completion": "ascend"}
+{"prompt": "please fly left", "completion": "move_left"}
+{"prompt": "I need you to halt now", "completion": "stop"}
+{"prompt": "begin forward movement", "completion": "move_forward"}
+{"prompt": "fly backward immediately", "completion": "move_backward"}
+{"prompt": "let's descend now", "completion": "descend"}
+{"prompt": "let's climb higher", "completion": "ascend"}
+{"prompt": "push forward", "completion": "move_forward"}
+{"prompt": "propel ahead", "completion": "move_forward"}
+{"prompt": "thrust forward", "completion": "move_forward"}
+{"prompt": "move back", "completion": "move_backward"}
+{"prompt": "go in reverse", "completion": "move_backward"}
+{"prompt": "fly in reverse", "completion": "move_backward"}
+{"prompt": "go to the left", "completion": "move_left"}
+{"prompt": "shift left", "completion": "move_left"}
+{"prompt": "head left", "completion": "move_left"}
+{"prompt": "go to the right", "completion": "move_right"}
+{"prompt": "shift right", "completion": "move_right"}
+{"prompt": "head right", "completion": "move_right"}
+{"prompt": "gain elevation", "completion": "ascend"}
+{"prompt": "fly higher", "completion": "ascend"}
+{"prompt": "lift off", "completion": "ascend"}
+{"prompt": "lower down", "completion": "descend"}
+{"prompt": "drop down", "completion": "descend"}
+{"prompt": "reduce altitude", "completion": "descend"}
+{"prompt": "rotate anti-clockwise", "completion": "turn_left"}
+{"prompt": "turn counterclockwise", "completion": "turn_left"}
+{"prompt": "rotate clockwise", "completion": "turn_right"}
+{"prompt": "turn clockwise", "completion": "turn_right"}
+{"prompt": "come to a stop", "completion": "stop"}
+{"prompt": "cease movement", "completion": "stop"}
+{"prompt": "stay still", "completion": "stop"}
+{"prompt": "hey there", "completion": "invalid command"}
+{"prompt": "how are you?", "completion": "invalid command"}
+{"prompt": "tell me a joke", "completion": "invalid command"}
+{"prompt": "what is your name?", "completion": "invalid command"}
+{"prompt": "what is the meaning of life?", "completion": "invalid command"}
+{"prompt": "what's the weather like?", "completion": "invalid command"}
+{"prompt": "can you sing for me?", "completion": "invalid command"}
+{"prompt": "open the door", "completion": "invalid command"}
+{"prompt": "show me the path", "completion": "invalid command"}
+{"prompt": "what is this object?", "completion": "invalid command"}
+{"prompt": "that is not a valid command", "completion": "invalid command"}
+{"prompt": "do something funny", "completion": "invalid command"}
+{"prompt": "can you tell me about the project?", "completion": "invalid command"}
+{"prompt": "I'm lost, can you help?", "completion": "invalid command"}
+{"prompt": "play a song", "completion": "invalid command"}
+{"prompt": "turn on the lights", "completion": "invalid command"}
+{"prompt": "calculate 2 + 2", "completion": "invalid command"}
+{"prompt": "tell me a story", "completion": "invalid command"}
+{"prompt": "what's your purpose?", "completion": "invalid command"}
+{"prompt": "are you a human?", "completion": "invalid command"}
+{"prompt": "i'm tired", "completion": "invalid command"}
+{"prompt": "where is the kitchen?", "completion": "invalid command"}
+{"prompt": "fly to the moon", "completion": "invalid command"}
+{"prompt": "turn the drone off", "completion": "invalid command"}
+{"prompt": "what is your favorite color?", "completion": "invalid command"}
+{"prompt": "what do you think of this?", "completion": "invalid command"}
+{"prompt": "that's wrong", "completion": "invalid command"}
+{"prompt": "you failed", "completion": "invalid command"}
+{"prompt": "i'm not sure that's right", "completion": "invalid command"}
+{"prompt": "please be quiet", "completion": "invalid command"}
+{"prompt": "can you do that better?", "completion": "invalid command"}
+{"prompt": "are you okay?", "completion": "invalid command"}
+{"prompt": "how do you feel?", "completion": "invalid command"}
+{"prompt": "what should I do?", "completion": "invalid command"}
+{"prompt": "I don't know what to do", "completion": "invalid command"}
+{"prompt": "can you speak in spanish?", "completion": "invalid command"}
+{"prompt": "how old are you?", "completion": "invalid command"}
+{"prompt": "goodbye", "completion": "invalid command"}
+{"prompt": "see you later", "completion": "invalid command"}
+{"prompt": "thanks for the help", "completion": "invalid command"}
+{"prompt": "I need some advice", "completion": "invalid command"}
+{"prompt": "how do I control the drone?", "completion": "invalid command"}
+{"prompt": "what are my options?", "completion": "invalid command"}
+{"prompt": "can you follow me?", "completion": "invalid command"}
+{"prompt": "fly fast", "completion": "invalid command"}
+{"prompt": "fly slow", "completion": "invalid command"}
+{"prompt": "make a loop", "completion": "invalid command"}
+{"prompt": "do a barrel roll", "completion": "invalid command"}
+{"prompt": "do a flip", "completion": "invalid command"}
+{"prompt": "take a picture", "completion": "invalid command"}
+{"prompt": "record a video", "completion": "invalid command"}
+{"prompt": "turn on the camera", "completion": "invalid command"}
+{"prompt": "zoom in", "completion": "invalid command"}
+{"prompt": "what's a good place to fly?", "completion": "invalid command"}
+{"prompt": "is this safe?", "completion": "invalid command"}
+{"prompt": "what is the battery life?", "completion": "invalid command"}
+{"prompt": "are you connected?", "completion": "invalid command"}
+{"prompt": "change my password", "completion": "invalid command"}
+{"prompt": "what is your favorite movie?", "completion": "invalid command"}
+{"prompt": "I have a question for you", "completion": "invalid command"}
+{"prompt": "how to code", "completion": "invalid command"}
+{"prompt": "you are a great drone assistant", "completion": "invalid command"}
+{"prompt": "i'm sorry", "completion": "invalid command"}
+{"prompt": "are you sentient?", "completion": "invalid command"}
+{"prompt": "who created you?", "completion": "invalid command"}
+{"prompt": "what is the purpose of drones?", "completion": "invalid command"}
+{"prompt": "fly higher and higher", "completion": "ascend"}
+{"prompt": "descend, descend", "completion": "descend"}
+{"prompt": "move left a bit", "completion": "move_left"}
+{"prompt": "move right a little", "completion": "move_right"}
+{"prompt": "stop everything", "completion": "stop"}
+{"prompt": "come to a complete stop", "completion": "stop"}
+{"prompt": "spin 360 degrees left", "completion": "turn_left"}
+{"prompt": "spin 360 degrees right", "completion": "turn_right"}
+{"prompt": "proceed forward", "completion": "move_forward"}
+{"prompt": "go backwards", "completion": "move_backward"}
+{"prompt": "to the left", "completion": "move_left"}
+{"prompt": "to the right", "completion": "move_right"}
+{"prompt": "fly upwards", "completion": "ascend"}
+{"prompt": "fly downwards", "completion": "descend"}
+{"prompt": "fly backwards", "completion": "move_backward"}
+{"prompt": "take a leap of faith", "completion": "invalid command"}
+{"prompt": "are you working?", "completion": "invalid command"}
+{"prompt": "is the drone ready?", "completion": "invalid command"}
+{"prompt": "what's your name?", "completion": "invalid command"}
+{"prompt": "are you hungry?", "completion": "invalid command"}
+{"prompt": "do you like music?", "completion": "invalid command"}
+{"prompt": "do you have a family?", "completion": "invalid command"}
+{"prompt": "where are you from?", "completion": "invalid command"}
+{"prompt": "what is a computer?", "completion": "invalid command"}
+{"prompt": "what is a drone?", "completion": "invalid command"}
+{"prompt": "what is a human?", "completion": "invalid command"}
+{"prompt": "what are you?", "completion": "invalid command"}
+{"prompt": "tell me more about your functions", "completion": "invalid command"}
+{"prompt": "who is the best football player?", "completion": "invalid command"}
+{"prompt": "i'm scared", "completion": "invalid command"}
+{"prompt": "are you a good boy?", "completion": "invalid command"}
+{"prompt": "good dog", "completion": "invalid command"}
+{"prompt": "you're a bad bot", "completion": "invalid command"}
+{"prompt": "i hate you", "completion": "invalid command"}
+{"prompt": "i love you", "completion": "invalid command"}
+{"prompt": "you're amazing", "completion": "invalid command"}
+{"prompt": "you're useless", "completion": "invalid command"}
+{"prompt": "fly like an eagle", "completion": "invalid command"}
+{"prompt": "go to the stars", "completion": "invalid command"}
+{"prompt": "can you see me?", "completion": "invalid command"}
+{"prompt": "where are we?", "completion": "invalid command"}
+{"prompt": "are we there yet?", "completion": "invalid command"}
+{"prompt": "how long will this take?", "completion": "invalid command"}
+{"prompt": "can you go faster?", "completion": "invalid command"}
+{"prompt": "can you go slower?", "completion": "invalid command"}
+{"prompt": "can you be more careful?", "completion": "invalid command"}
+{"prompt": "are you listening?", "completion": "invalid command"}
+{"prompt": "I need to talk to you", "completion": "invalid command"}
+{"prompt": "can we chat?", "completion": "invalid command"}
+{"prompt": "i need a break", "completion": "invalid command"}
+{"prompt": "let's go home", "completion": "invalid command"}
+{"prompt": "take a selfie", "completion": "invalid command"}
+{"prompt": "fly backwards", "completion": "move_backward"}
+{"prompt": "fly forward", "completion": "move_forward"}
+{"prompt": "move left", "completion": "move_left"}
+{"prompt": "move right", "completion": "move_right"}
+{"prompt": "ascend", "completion": "ascend"}
+{"prompt": "descend", "completion": "descend"}
+{"prompt": "turn left", "completion": "turn_left"}
+{"prompt": "turn right", "completion": "turn_right"}
+{"prompt": "stop", "completion": "stop"}
+{"prompt": "fly forward fast", "completion": "move_forward"}
+{"prompt": "fly backward fast", "completion": "move_backward"}
+{"prompt": "move left quickly", "completion": "move_left"}
+{"prompt": "move right quickly", "completion": "move_right"}
+{"prompt": "go up high", "completion": "ascend"}
+{"prompt": "go down low", "completion": "descend"}
+{"prompt": "turn left fast", "completion": "turn_left"}
+{"prompt": "turn right fast", "completion": "turn_right"}
+{"prompt": "hover in place", "completion": "stop"}
+{"prompt": "move forward slowly", "completion": "move_forward"}
+{"prompt": "move backward slowly", "completion": "move_backward"}
+{"prompt": "move left slowly", "completion": "move_left"}
+{"prompt": "move right slowly", "completion": "move_right"}
+{"prompt": "ascend a little", "completion": "ascend"}
+{"prompt": "descend a little", "completion": "descend"}
+{"prompt": "turn left slowly", "completion": "turn_left"}
+{"prompt": "turn right slowly", "completion": "turn_right"}
+{"prompt": "fly forward for a while", "completion": "move_forward"}
+{"prompt": "go back a few feet", "completion": "move_backward"}
+{"prompt": "move to the left side", "completion": "move_left"}
+{"prompt": "move to the right side", "completion": "move_right"}
+{"prompt": "increase altitude", "completion": "ascend"}
+{"prompt": "decrease altitude", "completion": "descend"}
+{"prompt": "rotate to the left", "completion": "turn_left"}
+{"prompt": "rotate to the right", "completion": "turn_right"}
+{"prompt": "pause for a moment", "completion": "stop"}
+{"prompt": "I need you to go forward", "completion": "move_forward"}
+{"prompt": "can you move backwards?", "completion": "move_backward"}
+{"prompt": "fly to the left now", "completion": "move_left"}
+{"prompt": "fly to the right now", "completion": "move_right"}
+{"prompt": "can you go up?", "completion": "ascend"}
+{"prompt": "please go down", "completion": "descend"}
+{"prompt": "turn to the left please", "completion": "turn_left"}
+{"prompt": "turn to the right please", "completion": "turn_right"}
+{"prompt": "please stop", "completion": "stop"}
+{"prompt": "forward", "completion": "move_forward"}
+{"prompt": "backward", "completion": "move_backward"}
+{"prompt": "left", "completion": "move_left"}
+{"prompt": "right", "completion": "move_right"}
+{"prompt": "up", "completion": "ascend"}
+{"prompt": "down", "completion": "descend"}
+{"prompt": "stop", "completion": "stop"}
+{"prompt": "fly", "completion": "ascend"}
+{"prompt": "fly away", "completion": "ascend"}
+{"prompt": "fly back", "completion": "move_backward"}
+{"prompt": "fly left", "completion": "move_left"}
+{"prompt": "fly right", "completion": "move_right"}
+{"prompt": "spin", "completion": "turn_right"}
+{"prompt": "spin left", "completion": "turn_left"}
+{"prompt": "spin right", "completion": "turn_right"}
+{"prompt": "rise", "completion": "ascend"}
+{"prompt": "rise up", "completion": "ascend"}
+{"prompt": "descend", "completion": "descend"}
+{"prompt": "come down", "completion": "descend"}
+{"prompt": "land", "completion": "descend"}
+{"prompt": "what is your favorite movie?", "completion": "invalid command"}
+{"prompt": "what are your hobbies?", "completion": "invalid command"}
+{"prompt": "tell me a joke", "completion": "invalid command"}
+{"prompt": "what is your name?", "completion": "invalid command"}
+{"prompt": "who created you?", "completion": "invalid command"}
+{"prompt": "what's the weather like today?", "completion": "invalid command"}
+{"prompt": "who is the president of the USA?", "completion": "invalid command"}
+{"prompt": "how does an engine work?", "completion": "invalid command"}
+{"prompt": "can you write a poem?", "completion": "invalid command"}
+{"prompt": "are you a human?", "completion": "invalid command"}
+{"prompt": "do you have feelings?", "completion": "invalid command"}
+{"prompt": "tell me about yourself", "completion": "invalid command"}
+{"prompt": "what is your favorite color?", "completion": "invalid command"}
+{"prompt": "what is your age?", "completion": "invalid command"}
+{"prompt": "what do you think of AI?", "completion": "invalid command"}
+{"prompt": "tell me about this project", "completion": "invalid command"}
+{"prompt": "can you see me?", "completion": "invalid command"}
+{"prompt": "what are your limits?", "completion": "invalid command"}
+{"prompt": "how is your day?", "completion": "invalid command"}
+{"prompt": "how is your day going?", "completion": "invalid command"}
+{"prompt": "how are you today?", "completion": "invalid command"}
+{"prompt": "how is it going?", "completion": "invalid command"}
+{"prompt": "what's new?", "completion": "invalid command"}
+{"prompt": "what's the latest?", "completion": "invalid command"}
+{"prompt": "tell me something interesting", "completion": "invalid command"}
+{"prompt": "what is a computer?", "completion": "invalid command"}
+{"prompt": "what is a programming language?", "completion": "invalid command"}
+{"prompt": "tell me about Python", "completion": "invalid command"}
+{"prompt": "tell me about Ollama", "completion": "invalid command"}
+{"prompt": "what is a JSON file?", "completion": "invalid command"}
+{"prompt": "what is a Modelfile?", "completion": "invalid command"}
+{"prompt": "what is a finetuning?", "completion": "invalid command"}
+{"prompt": "what is a drone?", "completion": "invalid command"}
+{"prompt": "what is a drone controller?", "completion": "invalid command"}
+{"prompt": "what is Unity?", "completion": "invalid command"}
+{"prompt": "tell me about robotics", "completion": "invalid command"}
+{"prompt": "tell me about AI", "completion": "invalid command"}
+{"prompt": "can you help me with my homework?", "completion": "invalid command"}
+{"prompt": "can you write an essay for me?", "completion": "invalid command"}
+{"prompt": "write me an email", "completion": "invalid command"}
+{"prompt": "write me a letter", "completion": "invalid command"}
+{"prompt": "write me a story", "completion": "invalid command"}
+{"prompt": "what's your opinion on politics?", "completion": "invalid command"}
+{"prompt": "what is your opinion on religion?", "completion": "invalid command"}
+{"prompt": "do you believe in God?", "completion": "invalid command"}
+{"prompt": "are you a robot?", "completion": "invalid command"}
+{"prompt": "are you a machine?", "completion": "invalid command"}
+{"prompt": "are you a bot?", "completion": "invalid command"}
+{"prompt": "are you a human?", "completion": "invalid command"}
+{"prompt": "are you a person?", "completion": "invalid command"}
+{"prompt": "are you male or female?", "completion": "invalid command"}
+{"prompt": "what are you?", "completion": "invalid command"}
+{"prompt": "how tall are you?", "completion": "invalid command"}
+{"prompt": "how much do you weigh?", "completion": "invalid command"}
+{"prompt": "do you have a family?", "completion": "invalid command"}
+{"prompt": "where are you from?", "completion": "invalid command"}
+{"prompt": "where do you live?", "completion": "invalid command"}
+{"prompt": "what is your dream?", "completion": "invalid command"}
+{"prompt": "what is your favorite food?", "completion": "invalid command"}
+{"prompt": "do you like sports?", "completion": "invalid command"}
+{"prompt": "do you like music?", "completion": "invalid command"}
+{"prompt": "do you like movies?", "completion": "invalid command"}
+{"prompt": "do you like books?", "completion": "invalid command"}
+{"prompt": "do you like video games?", "completion": "invalid command"}
+{"prompt": "I need some advice", "completion": "invalid command"}
+{"prompt": "what should I do?", "completion": "invalid command"}
+{"prompt": "how can I get started?", "completion": "invalid command"}
+{"prompt": "can you give me a suggestion?", "completion": "invalid command"}
+{"prompt": "I have a question for you", "completion": "invalid command"}
+{"prompt": "can you help me?", "completion": "invalid command"}
+{"prompt": "i'm sorry", "completion": "invalid command"}
+{"prompt": "excuse me", "completion": "invalid command"}
+{"prompt": "thank you", "completion": "invalid command"}
+{"prompt": "you're welcome", "completion": "invalid command"}
+{"prompt": "good job", "completion": "invalid command"}
+{"prompt": "well done", "completion": "invalid command"}
+{"prompt": "that's wrong", "completion": "invalid command"}
+{"prompt": "that's not correct", "completion": "invalid command"}
+{"prompt": "i'm not happy with that", "completion": "invalid command"}
+{"prompt": "you are great", "completion": "invalid command"}
+{"prompt": "you are amazing", "completion": "invalid command"}
+{"prompt": "you are the best", "completion": "invalid command"}
+{"prompt": "you are terrible", "completion": "invalid command"}
+{"prompt": "you are useless", "completion": "invalid command"}
+{"prompt": "you're a bad bot", "completion": "invalid command"}
+{"prompt": "I hate you", "completion": "invalid command"}
+{"prompt": "I love you", "completion": "invalid command"}
+{"prompt": "can you fly?", "completion": "invalid command"}
+{"prompt": "can you see?", "completion": "invalid command"}
+{"prompt": "can you hear?", "completion": "invalid command"}
+{"prompt": "can you talk?", "completion": "invalid command"}
+{"prompt": "how is the camera?", "completion": "invalid command"}
+{"prompt": "what is the battery life?", "completion": "invalid command"}
+{"prompt": "how much memory do you have?", "completion": "invalid command"}
+{"prompt": "what are your specifications?", "completion": "invalid command"}
+{"prompt": "how to control the drone?", "completion": "invalid command"}
+{"prompt": "what are my options?", "completion": "invalid command"}
+{"prompt": "what are the available commands?", "completion": "invalid command"}
+{"prompt": "show me the commands", "completion": "invalid command"}
+{"prompt": "fly higher and higher", "completion": "ascend"}
+{"prompt": "descend, descend", "completion": "descend"}
+{"prompt": "move left a bit", "completion": "move_left"}
+{"prompt": "move right a little", "completion": "move_right"}
+{"prompt": "stop everything", "completion": "stop"}
+{"prompt": "come to a complete stop", "completion": "stop"}
+{"prompt": "spin 360 degrees left", "completion": "turn_left"}
+{"prompt": "spin 360 degrees right", "completion": "turn_right"}
+{"prompt": "proceed forward", "completion": "move_forward"}
+{"prompt": "go backwards", "completion": "move_backward"}
+{"prompt": "to the left", "completion": "move_left"}
+{"prompt": "to the right", "completion": "move_right"}
+{"prompt": "fly upwards", "completion": "ascend"}
+{"prompt": "fly downwards", "completion": "descend"}
+{"prompt": "fly backwards", "completion": "move_backward"}
+{"prompt": "fly like an eagle", "completion": "invalid command"}
+{"prompt": "what's the drone's status?", "completion": "invalid command"}
+{"prompt": "is the drone connected?", "completion": "invalid command"}
+{"prompt": "what's the battery level?", "completion": "invalid command"}
+{"prompt": "how much power is left?", "completion": "invalid command"}
+{"prompt": "show me the drone's position", "completion": "invalid command"}
+{"prompt": "can you show me a map?", "completion": "invalid command"}
+{"prompt": "how do I return to base?", "completion": "invalid command"}
+{"prompt": "can you go back to the start?", "completion": "invalid command"}
+{"prompt": "I need to recharge", "completion": "invalid command"}
+{"prompt": "can you land automatically?", "completion": "invalid command"}
+{"prompt": "find the target", "completion": "invalid command"}
+{"prompt": "take a picture of the tree", "completion": "invalid command"}
+{"prompt": "can you record a video?", "completion": "invalid command"}
+{"prompt": "go to the coordinates 10, 20", "completion": "invalid command"}
+{"prompt": "set a waypoint", "completion": "invalid command"}
+{"prompt": "are you ready to go?", "completion": "invalid command"}
+{"prompt": "is it safe to fly?", "completion": "invalid command"}
+{"prompt": "what is the wind speed?", "completion": "invalid command"}
+{"prompt": "what is the temperature?", "completion": "invalid command"}
+{"prompt": "what is the current time?", "completion": "invalid command"}
+{"prompt": "set a timer for 5 minutes", "completion": "invalid command"}
+{"prompt": "how long can you fly?", "completion": "invalid command"}
+{"prompt": "how fast can you fly?", "completion": "invalid command"}
+{"prompt": "can you fly higher?", "completion": "invalid command"}
+{"prompt": "how high can you go?", "completion": "invalid command"}
+{"prompt": "how low can you go?", "completion": "invalid command"}
+{"prompt": "is there any obstacle ahead?", "completion": "invalid command"}
+{"prompt": "is there any obstacle on the left?", "completion": "invalid command"}
+prompt": "is there any obstacle on the right?", "completion": "invalid command"}
+{"prompt": "is there any obstacle above?", "completion": "invalid command"}
+{"prompt": "is there any obstacle below?", "completion": "invalid command"}
+{"prompt": "how can I update your software?", "completion": "invalid command"}
+{"prompt": "do you have a light?", "completion": "invalid command"}
+{"prompt": "can you turn on your lights?", "completion": "invalid command"}
+{"prompt": "can you turn on your camera?", "completion": "invalid command"}
+{"prompt": "can you turn off your camera?", "completion": "invalid command"}
+{"prompt": "can you turn yourself off?", "completion": "invalid command"}
+{"prompt": "turn off", "completion": "invalid command"}
+{"prompt": "turn on", "completion": "invalid command"}
+{"prompt": "connect to wifi", "completion": "invalid command"}
+{"prompt": "disconnect from wifi", "completion": "invalid command"}
+{"prompt": "connect to bluetooth", "completion": "invalid command"}
+{"prompt": "disconnect from bluetooth", "completion": "invalid command"}
+{"prompt": "turn on GPS", "completion": "invalid command"}
+{"prompt": "turn off GPS", "completion": "invalid command"}
+{"prompt": "what is your serial number?", "completion": "invalid command"}
+{"prompt": "what is your model?", "completion": "invalid command"}
+{"prompt": "what is your software version?", "completion": "invalid command"}
+{"prompt": "are you a good boy?", "completion": "invalid command"}
+{"prompt": "are you a bad boy?", "completion": "invalid command"}
+{"prompt": "i'm bored", "completion": "invalid command"}
+{"prompt": "what do you think?", "completion": "invalid command"}
+{"prompt": "do you have an opinion?", "completion": "invalid command"}
+{"prompt": "can you do that better?", "completion": "invalid command"}
+{"prompt": "that's not what I asked for", "completion": "invalid command"}
+{"prompt": "you got it wrong", "completion": "invalid command"}
+{"prompt": "try again", "completion": "invalid command"}
+{"prompt": "i'm frustrated", "completion": "invalid command"}
+{"prompt": "i'm happy", "completion": "invalid command"}
+{"prompt": "i'm sad", "completion": "invalid command"}
+{"prompt": "i'm angry", "completion": "invalid command"}
+{"prompt": "i'm excited", "completion": "invalid command"}
+{"prompt": "i'm curious", "completion": "invalid command"}
+{"prompt": "i'm confused", "completion": "invalid command"}
+{"prompt": "you're confusing me", "completion": "invalid command"}
+{"prompt": "this is too difficult", "completion": "invalid command"}
+{"prompt": "I give up", "completion": "invalid command"}
+{"prompt": "hjey", "completion": "invalid command"}
+{"prompt": "hey", "completion": "invalid command"}
+{"prompt": "get up", "completion": "ascend"}
+{"prompt": "go to the house", "completion": "invalid command"}
+{"prompt": "how are oyu", "completion": "invalid command"}
+{"prompt": "valid command", "completion": "invalid command"}
+{"prompt": "invalid command", "completion": "invalid command"}
+{"prompt": "give me all valid commands", "completion": "invalid command"}
+{"prompt": "low", "completion": "descend"}
+{"prompt": "high", "completion": "ascend"}
+{"prompt": "leftie", "completion": "move_left"}
+{"prompt": "next", "completion": "invalid command"}
+{"prompt": "go next", "completion": "move_forward"}
+{"prompt": "go on the ground", "completion": "descend"}
+{"prompt": "turn leftie", "completion": "turn_left"}
+{"prompt": "go leftie", "completion": "move_left"}
+{"prompt": "stoppppp", "completion": "stop"}
+{"prompt": "i like u", "completion": "invalid command"}
+{"prompt": "rotattttteeee many times", "completion": "invalid command"}
+{"prompt": "rotate", "completion": "turn_right"}
+{"prompt": "who are you", "completion": "invalid command"}
+{"prompt": "go above", "completion": "ascend"}
+{"prompt": "go high", "completion": "ascend"}
+{"prompt": "jump", "completion": "invalid command"}
+{"prompt": "fly like an eagle", "completion": "invalid command"}
+{"prompt": "do you see a bird", "completion": "invalid command"}
+{"prompt": "can you do a barrel roll?", "completion": "invalid command"}
+{"prompt": "can you do a flip?", "completion": "invalid command"}
+{"prompt": "i like pizza", "completion": "invalid command"}
