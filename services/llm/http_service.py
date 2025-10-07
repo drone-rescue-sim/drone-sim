@@ -25,18 +25,18 @@ def process_command():
         print(f"📥 Received command: {user_input}")
 
         # Process input with LLM
-        command = get_drone_instructions(user_input)
+        commands = get_drone_instructions(user_input)
 
-        if command:
-            print(f"📤 Processing command: {command}")
+        if commands:
+            print(f"📤 Processing commands: {commands}")
             # Send instructions to Unity
-            success = send_to_unity(command)
+            success = send_to_unity(commands)
             if success:
-                return jsonify({'status': 'success', 'command': command}), 200
+                return jsonify({'status': 'success', 'commands': commands}), 200
             else:
                 return jsonify({'error': 'Failed to send to Unity'}), 500
         else:
-            return jsonify({'error': 'Failed to generate valid command'}), 500
+            return jsonify({'error': 'Failed to generate valid commands'}), 500
 
     except Exception as e:
         print(f"❌ Error processing command: {e}")
@@ -102,23 +102,23 @@ def process_audio_command():
 
                 if transcript:
                     # Process the transcribed text as a drone command
-                    command = get_drone_instructions(transcript)
+                    commands = get_drone_instructions(transcript)
 
-                    if command:
-                        print(f"📤 Sending command: {command}")
-                        success = send_to_unity(command)
+                    if commands:
+                        print(f"📤 Sending commands: {commands}")
+                        success = send_to_unity(commands)
 
                         return jsonify({
                             'transcript': transcript,
                             'confidence': confidence,
-                            'command': command,
+                            'commands': commands,
                             'status': 'success' if success else 'failed'
                         }), 200
                     else:
                         return jsonify({
                             'transcript': transcript,
                             'confidence': confidence,
-                            'error': 'Failed to generate valid command'
+                            'error': 'Failed to generate valid commands'
                         }), 500
                 else:
                     return jsonify({'error': 'No speech detected'}), 400

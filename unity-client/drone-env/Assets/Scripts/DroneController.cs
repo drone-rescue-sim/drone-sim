@@ -213,12 +213,30 @@ public class DroneController : MonoBehaviour
 
                     // Parse JSON command
                     var commandData = JsonUtility.FromJson<CommandData>(body);
-                    if (commandData != null && !string.IsNullOrEmpty(commandData.command))
+                    if (commandData != null)
                     {
-                        // Add command to queue for processing on main thread
-                        lock (commandQueue)
+                        // Handle multiple commands (new format)
+                        if (commandData.commands != null && commandData.commands.Length > 0)
                         {
-                            commandQueue.Enqueue(commandData.command);
+                            // Add all commands to queue for processing on main thread
+                            lock (commandQueue)
+                            {
+                                foreach (string cmd in commandData.commands)
+                                {
+                                    if (!string.IsNullOrEmpty(cmd))
+                                    {
+                                        commandQueue.Enqueue(cmd);
+                                    }
+                                }
+                            }
+                        }
+                        // Handle single command (backward compatibility)
+                        else if (!string.IsNullOrEmpty(commandData.command))
+                        {
+                            lock (commandQueue)
+                            {
+                                commandQueue.Enqueue(commandData.command);
+                            }
                         }
                     }
                 }
@@ -369,6 +387,7 @@ public class DroneController : MonoBehaviour
     [System.Serializable]
     private class CommandData
     {
-        public string command;
+        public string command;  // For backward compatibility
+        public string[] commands;  // For multiple commands
     }
 }

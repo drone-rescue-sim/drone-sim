@@ -10,7 +10,7 @@ def get_drone_instructions(user_input):
     """
     try:
         # Improved system prompt with specific commands and examples
-        system_prompt = """You are a drone control assistant for Unity. Translate user instructions into simple drone movement commands.
+        system_prompt = """You are a drone control assistant for Unity. Translate user instructions into drone movement commands.
 
 Available commands:
 - move_forward: Move the drone forward
@@ -24,17 +24,21 @@ Available commands:
 - stop: Stop all movement
 
 Instructions:
-1. Respond with ONLY the command name, nothing else
+1. Respond with a JSON array of commands, e.g., ["move_forward", "ascend"]
 2. Use exactly the command names listed above
-3. If the user gives a complex instruction, break it down to the most important single command
-4. If unsure, respond with "stop"
+3. If the user gives multiple instructions, include all relevant commands
+4. If the user gives a single instruction, return a single-element array
+5. If unsure, respond with ["stop"]
 
 Examples:
-User: "fly forward" -> move_forward
-User: "go up in the air" -> ascend
-User: "turn around" -> turn_left
-User: "move to the right" -> move_right
-User: "hover in place" -> stop
+User: "fly forward" -> ["move_forward"]
+User: "go up in the air" -> ["ascend"]
+User: "turn around" -> ["turn_left"]
+User: "move to the right" -> ["move_right"]
+User: "hover in place" -> ["stop"]
+User: "fly forward and go up" -> ["move_forward", "ascend"]
+User: "turn left and move forward" -> ["turn_left", "move_forward"]
+User: "go up and turn right" -> ["ascend", "turn_right"]
 """
 
         response = ollama.chat(
@@ -47,37 +51,73 @@ User: "hover in place" -> stop
         instructions = response['message']['content']
 
         # Clean and validate the response
-        command = instructions.strip().lower()
-
-        # Validate command
-        valid_commands = [
-            "move_forward", "move_backward", "move_left", "move_right",
-            "ascend", "go_up", "descend", "go_down",
-            "turn_left", "turn_right", "stop"
-        ]
-
-        if command in valid_commands:
-            return command
-        else:
-            print(f"Invalid command generated: {command}, using 'stop' instead")
-            return "stop"
+        command_text = instructions.strip()
+        
+        # Try to parse as JSON array
+        try:
+            import json
+            commands = json.loads(command_text)
+            
+            # Ensure it's a list
+            if not isinstance(commands, list):
+                commands = [commands]
+            
+            # Validate each command
+            valid_commands = [
+                "move_forward", "move_backward", "move_left", "move_right",
+                "ascend", "go_up", "descend", "go_down",
+                "turn_left", "turn_right", "stop"
+            ]
+            
+            validated_commands = []
+            for cmd in commands:
+                cmd_lower = cmd.strip().lower()
+                if cmd_lower in valid_commands:
+                    validated_commands.append(cmd_lower)
+                else:
+                    print(f"Invalid command in array: {cmd}, skipping")
+            
+            if validated_commands:
+                return validated_commands
+            else:
+                print("No valid commands found, using 'stop'")
+                return ["stop"]
+                
+        except json.JSONDecodeError:
+            # Fallback: try to parse as single command
+            command = command_text.lower()
+            valid_commands = [
+                "move_forward", "move_backward", "move_left", "move_right",
+                "ascend", "go_up", "descend", "go_down",
+                "turn_left", "turn_right", "stop"
+            ]
+            
+            if command in valid_commands:
+                return [command]
+            else:
+                print(f"Invalid command generated: {command}, using 'stop' instead")
+                return ["stop"]
 
     except Exception as e:
         print(f"Error generating instructions: {e}")
-        return "stop"
+        return ["stop"]
 
-def send_to_unity(command):
+def send_to_unity(commands):
     """
     Send the processed instructions to Unity via HTTP POST.
     """
     try:
-        payload = {"command": command}
+        # Handle both single command (string) and multiple commands (list) for backward compatibility
+        if isinstance(commands, str):
+            commands = [commands]
+        
+        payload = {"commands": commands}
         headers = {"Content-Type": "application/json"}
 
         r = requests.post(UNITY_URL, json=payload, headers=headers, timeout=5.0)
 
         if r.status_code == 200:
-            print(f"✓ Sent command to Unity: {command}")
+            print(f"✓ Sent commands to Unity: {commands}")
             return True
         else:
             print(f"✗ Unity responded with status code {r.status_code}: {r.text}")
@@ -112,16 +152,16 @@ def main():
 
             # Process input with LLM
             print("🧠 Processing with LLM...")
-            command = get_drone_instructions(user_input)
+            commands = get_drone_instructions(user_input)
 
-            if command:
-                print(f"📤 Sending command: {command}")
+            if commands:
+                print(f"📤 Sending commands: {commands}")
                 # Send instructions to Unity
-                success = send_to_unity(command)
+                success = send_to_unity(commands)
                 if not success:
                     print("💡 Tip: Make sure Unity is running with the drone scene active")
             else:
-                print("❌ Failed to generate valid command")
+                print("❌ Failed to generate valid commands")
 
         except KeyboardInterrupt:
             print("\n👋 Interrupted by user. Exiting...")

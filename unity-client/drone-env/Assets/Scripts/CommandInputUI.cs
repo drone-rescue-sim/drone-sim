@@ -248,6 +248,12 @@ public class CommandInputUI : MonoBehaviour
                 if (whisperResponse != null && !string.IsNullOrEmpty(whisperResponse.transcript))
                 {
                     Debug.Log($"Transcribed command: {whisperResponse.transcript}");
+                    
+                    // Log multiple commands if available
+                    if (whisperResponse.commands != null && whisperResponse.commands.Length > 0)
+                    {
+                        Debug.Log($"Generated commands: {string.Join(", ", whisperResponse.commands)}");
+                    }
 
                     // Show the transcribed text in the input field
                     if (commandInput != null)
@@ -362,5 +368,6 @@ public class CommandInputUI : MonoBehaviour
     {
         public string transcript;
         public float confidence;
+        public string[] commands;  // For multiple commands
     }
 }

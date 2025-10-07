@@ -127,12 +127,15 @@ class DroneSystemTester:
         self.print_header("TEXT COMMAND TESTS")
 
         test_commands = [
-            ("fly forward", "move_forward"),
-            ("go up", "ascend"),
-            ("turn left", "turn_left"),
-            ("stop", "stop"),
-            ("go back", "move_backward"),
-            ("descend", "descend")
+            ("fly forward", ["move_forward"]),
+            ("go up", ["ascend"]),
+            ("turn left", ["turn_left"]),
+            ("stop", ["stop"]),
+            ("go back", ["move_backward"]),
+            ("descend", ["descend"]),
+            ("fly forward and go up", ["move_forward", "ascend"]),
+            ("turn left and move forward", ["turn_left", "move_forward"]),
+            ("go up and turn right", ["ascend", "turn_right"])
         ]
 
         success_count = 0
@@ -145,13 +148,13 @@ class DroneSystemTester:
 
                 if response.status_code == 200:
                     result = response.json()
-                    processed_cmd = result.get('processed_command', '')
-                    if processed_cmd == expected_output:
-                        self.log_test(f"Text: '{input_cmd}'", True, f"→ {processed_cmd}")
+                    processed_commands = result.get('commands', [])
+                    if processed_commands == expected_output:
+                        self.log_test(f"Text: '{input_cmd}'", True, f"→ {processed_commands}")
                         success_count += 1
                     else:
                         self.log_test(f"Text: '{input_cmd}'", False,
-                                    f"Expected: {expected_output}, Got: {processed_cmd}")
+                                    f"Expected: {expected_output}, Got: {processed_commands}")
                 else:
                     self.log_test(f"Text: '{input_cmd}'", False,
                                 f"HTTP {response.status_code}: {response.text}")
