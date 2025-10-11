@@ -12981,6 +12981,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: PoplarTree001_pr
       objectReference: {fileID: 0}
+    - target: {fileID: 5383236505180310548, guid: 6770e849cebefb44eaa52103c9cf174f, type: 3}
+      propertyPath: m_TagString
+      value: Tree
+      objectReference: {fileID: 0}
     - target: {fileID: 7996880500377104151, guid: 6770e849cebefb44eaa52103c9cf174f, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -21863,6 +21867,10 @@ PrefabInstance:
     - target: {fileID: 1139572726157748, guid: 3c98bb4bee2f2ba4b92a2fbca7b8831f, type: 3}
       propertyPath: m_Name
       value: Lemon Tree 1 (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 1139572726157748, guid: 3c98bb4bee2f2ba4b92a2fbca7b8831f, type: 3}
+      propertyPath: m_TagString
+      value: Tree
       objectReference: {fileID: 0}
     - target: {fileID: 4050686539739764, guid: 3c98bb4bee2f2ba4b92a2fbca7b8831f, type: 3}
       propertyPath: m_LocalScale.x
