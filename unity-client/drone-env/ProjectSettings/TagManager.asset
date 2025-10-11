@@ -6,6 +6,11 @@ TagManager:
   tags:
   - Tree
   - Bush
+  - Building
+  - Bench
+  - Street Lamp
+  - Fire
+  - Person
   layers:
   - Default
   - TransparentFX
