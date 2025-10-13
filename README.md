@@ -19,6 +19,7 @@ A comprehensive Unity-based drone simulation featuring **voice control** and **n
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - **Python 3.11+** with pip
 - **Unity 2021+** with Universal Render Pipeline
 - **Ollama** (for local LLM processing)
@@ -29,6 +30,7 @@ A comprehensive Unity-based drone simulation featuring **voice control** and **n
 ### 1. Install System Dependencies
 
 #### macOS (with Homebrew)
+
 ```bash
 # Install Homebrew if not already installed
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -42,6 +44,7 @@ bash Miniconda3-latest-MacOSX-arm64.sh
 ```
 
 #### Linux
+
 ```bash
 # Install ffmpeg
 sudo apt update && sudo apt install ffmpeg
@@ -112,9 +115,11 @@ curl http://127.0.0.1:5006/health  # Check service health
 ### 7. Control the Drone
 
 #### 🎮 Manual Controls (Always Available)
+
 - **↑↓←→** - Move in cardinal directions
 
 #### ✍️ Text Commands (LLM)
+
 1. Press **TAB** to open command interface
 2. Type commands like:
    - "fly forward" → moves forward
@@ -123,11 +128,12 @@ curl http://127.0.0.1:5006/health  # Check service health
    - "stop" → halts all movement
 
 #### 🎤 Voice Commands (Whisper + LLM)
+
 1. Press **TAB** to open command interface
 2. Click the **🎤 Microphone button** (turns red when recording)
 3. **Speak naturally** for 5 seconds (auto-stop) or click again to stop
 4. Voice is transcribed and processed automatically
-5. Try saying: *"Fly forward"*, *"Go back"*, *"Turn around"* etc.
+5. Try saying: _"Fly forward"_, _"Go back"_, _"Turn around"_ etc.
 
 **💡 Voice commands work exactly like text commands but use your microphone!**
 
@@ -217,6 +223,7 @@ drone-sim/
 ### Key Components
 
 #### 1. 🎤 Voice Recording System (`CommandInputUI.cs`)
+
 - **Unity Microphone API** - Captures audio from system microphone
 - **5-second auto-stop** - Prevents endless recordings
 - **Real-time feedback** - UI button turns red during recording
@@ -224,6 +231,7 @@ drone-sim/
 - **Error handling** - Graceful fallback if microphone unavailable
 
 #### 2. 🔊 Whisper Audio Processing (`http_service.py`)
+
 - **OpenAI Whisper integration** - Industry-leading speech-to-text
 - **Automatic language detection** - Works with multiple languages
 - **Confidence scoring** - Quality assessment of transcriptions
@@ -231,12 +239,14 @@ drone-sim/
 - **Error recovery** - Handles network issues and model downloads
 
 #### 3. 🤖 LLM Command Processing (`main.py`)
+
 - **Ollama + Llama2** - Local AI model, no internet required
 - **Natural language understanding** - Translates speech/text to commands
 - **Command validation** - Ensures safe and valid drone instructions
 - **Extensible prompt engineering** - Easy to add new command types
 
 #### 4. 🚁 Unity Drone Controller (`DroneController.cs`)
+
 - **HTTP server** on port 5005 - Receives processed commands
 - **Multi-modal input** - Manual controls + LLM commands + voice
 - **Movement interpolation** - Smooth drone animations
@@ -244,6 +254,7 @@ drone-sim/
 - **Error recovery** - Continues operation despite communication issues
 
 #### 5. 🌐 Flask HTTP Service (`http_service.py`)
+
 - **Dual endpoints**: `/process_command` (text) + `/process_audio_command` (voice)
 - **Health monitoring** - `/health` endpoint for system status
 - **Concurrent processing** - Handles multiple Unity clients
@@ -253,36 +264,45 @@ drone-sim/
 ### 🎯 Supported Commands
 
 #### 🎮 Manual Controls (Always Available):
+
 - **Arrow Keys**: ↑↓←→ for cardinal movement
 - **Real-time response** - No processing delay
 
 #### ✍️ Text Commands (LLM Processing):
+
 **Movement:**
+
 - `"fly forward"`, `"go ahead"`, `"move ahead"` → `move_forward`
 - `"go back"`, `"fly backward"`, `"reverse"` → `move_backward`
 - `"go left"`, `"fly left"`, `"strafe left"` → `move_left`
 - `"go right"`, `"fly right"`, `"strafe right"` → `move_right`
 
 **Vertical Movement:**
+
 - `"go up"`, `"fly up"`, `"ascend"`, `"climb"` → `ascend`
 - `"go down"`, `"fly down"`, `"descend"`, `"lower"` → `descend`
 
 **Rotation:**
+
 - `"turn left"`, `"rotate left"`, `"spin left"` → `turn_left`
 - `"turn right"`, `"rotate right"`, `"spin right"` → `turn_right`
 
 **Special Commands:**
+
 - `"stop"`, `"halt"`, `"emergency stop"` → `stop`
 - `"hover"`, `"stay still"`, `"hold position"` → `stop`
 
 #### 🎤 Voice Commands (Whisper + LLM):
+
 **All text commands work with voice!** Simply speak naturally:
-- *"Fly forward please"* → moves forward
-- *"Can you go up a bit?"* → ascends
-- *"Turn around for me"* → rotates 180°
-- *"Stop right now"* → emergency stop
+
+- _"Fly forward please"_ → moves forward
+- _"Can you go up a bit?"_ → ascends
+- _"Turn around for me"_ → rotates 180°
+- _"Stop right now"_ → emergency stop
 
 **Voice Features:**
+
 - 🎯 **Natural speech** - No need for exact phrasing
 - 🌍 **Multi-language** - Automatic language detection
 - ⚡ **Real-time processing** - Results in 2-5 seconds
@@ -290,6 +310,7 @@ drone-sim/
 - 🔄 **Seamless integration** - Voice → Text → LLM → Drone
 
 **Pro Tips for Voice:**
+
 - Speak clearly but naturally
 - Wait for the beep/sound before speaking
 - Commands are processed after 5 seconds or manual stop
@@ -299,13 +320,14 @@ drone-sim/
 
 ### 🎯 Control Methods Overview
 
-| Method | Input Type | Processing | Speed | Setup Required |
-|--------|------------|------------|-------|----------------|
-| **Manual** | Arrow Keys | Direct | Instant | None |
-| **Text** | Keyboard + UI | LLM | 1-2 sec | Ollama running |
-| **Voice** | Microphone | Whisper + LLM | 3-6 sec | All services |
+| Method     | Input Type    | Processing    | Speed   | Setup Required |
+| ---------- | ------------- | ------------- | ------- | -------------- |
+| **Manual** | Arrow Keys    | Direct        | Instant | None           |
+| **Text**   | Keyboard + UI | LLM           | 1-2 sec | Ollama running |
+| **Voice**  | Microphone    | Whisper + LLM | 3-6 sec | All services   |
 
 ### 🎮 Manual Controls (Always Available)
+
 - **↑** - Move forward
 - **↓** - Move backward
 - **←** - Move left
@@ -313,6 +335,7 @@ drone-sim/
 - **No dependencies** - Works even if services are down
 
 ### ✍️ Text Commands (LLM Processing)
+
 1. Press **TAB** to open command interface
 2. Type natural language: `"fly forward"`, `"go up"`, etc.
 3. Press **Enter** or click **Send** button
@@ -321,6 +344,7 @@ drone-sim/
 6. **Result**: Command processed by Llama2, translated to drone action
 
 ### 🎤 Voice Commands (Whisper + LLM)
+
 1. Press **TAB** to open command interface
 2. Click **🎤 Microphone** button (turns red when recording)
 3. **Speak naturally** for up to 5 seconds
@@ -329,6 +353,7 @@ drone-sim/
 6. **Visual feedback**: Button color indicates recording status
 
 ### 🎛️ UI Controls
+
 - **TAB** - Toggle command interface
 - **Enter** - Send text command
 - **🎤 Button** - Start/stop voice recording
@@ -336,6 +361,7 @@ drone-sim/
 - **Close Button** - Close interface without sending
 
 ### ⚡ Performance Expectations
+
 - **Manual**: Instant response
 - **Text**: 1-2 seconds (LLM processing)
 - **Voice**: 3-6 seconds (Recording + Whisper + LLM)
@@ -359,6 +385,7 @@ ollama pull llama2
 ### Installing ffmpeg (Required for Voice)
 
 #### macOS with Homebrew:
+
 ```bash
 # Install Homebrew if needed
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -371,6 +398,7 @@ ffmpeg -version
 ```
 
 #### Linux:
+
 ```bash
 # Ubuntu/Debian
 sudo apt update && sudo apt install ffmpeg
@@ -380,11 +408,13 @@ sudo yum install ffmpeg
 ```
 
 #### Windows:
+
 Download from https://ffmpeg.org/download.html and add to PATH
 
 ### Python Environment Setup
 
 #### Using Conda (Recommended):
+
 ```bash
 # Install Miniconda/Anaconda
 # macOS ARM64
@@ -400,6 +430,7 @@ pip install -r requirements.txt
 ```
 
 #### Using venv:
+
 ```bash
 # Create virtual environment
 python -m venv venv
@@ -434,6 +465,7 @@ python http_service.py
 ### Common Issues
 
 #### "LLM service connection failed"
+
 ```bash
 # Check if services are running
 python start.py status
@@ -443,6 +475,7 @@ python start.py restart
 ```
 
 #### "Ollama not found"
+
 ```bash
 # Install Ollama
 curl -fsSL https://ollama.ai/install.sh | sh
@@ -455,6 +488,7 @@ ollama pull llama2
 ```
 
 #### "Port 5006 already in use"
+
 ```bash
 # Kill existing process
 lsof -ti :5006 | xargs kill -9
@@ -465,15 +499,18 @@ lsof -ti :5006 | xargs kill -9
 #### 🎤 Voice Recording Issues
 
 **"Microphone not found"**
+
 ```bash
 # Check available microphones
 python -c "import pyaudio; p = pyaudio.PyAudio(); [print(f'{i}: {p.get_device_info_by_index(i)[\"name\"]}') for i in range(p.get_device_count())]"
 ```
+
 - Ensure microphone permissions in macOS System Settings
 - Try different microphone devices
 - Restart Unity after changing microphone settings
 
 **"ffmpeg not found"**
+
 ```bash
 # macOS
 brew install ffmpeg
@@ -486,12 +523,14 @@ ffmpeg -version
 ```
 
 **"Whisper model download timeout"**
+
 - First voice command may take 2-5 minutes to download model
 - Check internet connection
 - Model is cached after first download
 - Use `tiny` model for faster processing
 
 **"Audio processing timeout"**
+
 - Increase timeout in `CommandInputUI.cs` if needed
 - Check Python service logs for detailed errors
 - Ensure sufficient RAM (4GB+ recommended)
@@ -499,17 +538,20 @@ ffmpeg -version
 #### Unity Issues
 
 **"HttpClient timeout error"**
+
 - Service restarted while Unity was running
 - Restart services: `python start.py restart`
 - Check service health: `curl http://127.0.0.1:5006/health`
 
 **UI not showing**
+
 - Check Console for errors
 - Ensure CommandUIManager is in scene
 - Verify TMP Essentials are imported
 - Press TAB to manually toggle UI
 
 **Compilation errors**
+
 - Ensure all C# scripts are in Assets/Scripts/
 - Check for missing using statements
 - Verify Unity version compatibility
@@ -546,9 +588,11 @@ ffmpeg -version
 ### LLM Service Endpoints
 
 #### POST `/process_command`
+
 Process natural language text commands from Unity.
 
 **Request:**
+
 ```json
 {
   "command": "fly forward"
@@ -556,6 +600,7 @@ Process natural language text commands from Unity.
 ```
 
 **Response:**
+
 ```json
 {
   "processed_command": "move_forward",
@@ -564,12 +609,15 @@ Process natural language text commands from Unity.
 ```
 
 #### POST `/process_audio_command`
+
 Process voice commands from Unity (WAV audio files).
 
 **Request:** (multipart/form-data)
+
 - `audio`: WAV audio file (voice command)
 
 **Response:**
+
 ```json
 {
   "transcript": "fly forward",
@@ -580,6 +628,7 @@ Process voice commands from Unity (WAV audio files).
 ```
 
 **Error Response:**
+
 ```json
 {
   "error": "Audio processing timeout"
@@ -587,9 +636,11 @@ Process voice commands from Unity (WAV audio files).
 ```
 
 #### GET `/health`
+
 Check service health and component availability.
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -604,6 +655,7 @@ Check service health and component availability.
 The Unity drone controller runs an HTTP server on port 5005 that receives commands from the LLM service.
 
 **Expected format:**
+
 ```json
 {
   "command": "move_forward"
@@ -611,12 +663,14 @@ The Unity drone controller runs an HTTP server on port 5005 that receives comman
 ```
 
 **Supported Commands:**
+
 - `move_forward`, `move_backward`, `move_left`, `move_right`
 - `ascend`, `descend`
 - `turn_left`, `turn_right`
 - `stop`
 
 **Expected format:**
+
 ```json
 {
   "command": "move_forward"
@@ -659,13 +713,13 @@ The Unity drone controller runs an HTTP server on port 5005 that receives comman
 
 ### ⚡ Performance Characteristics
 
-| Component | Technology | Processing Time | Resource Usage |
-|-----------|------------|-----------------|----------------|
-| **Voice Recording** | Unity Microphone API | Instant | Low |
-| **Audio Processing** | ffmpeg | <1 sec | Medium |
-| **Speech Recognition** | OpenAI Whisper | 2-3 sec | High (first time) |
-| **LLM Processing** | Ollama Llama2 | 1-2 sec | Medium |
-| **Drone Control** | Unity Engine | Instant | Low |
+| Component              | Technology           | Processing Time | Resource Usage    |
+| ---------------------- | -------------------- | --------------- | ----------------- |
+| **Voice Recording**    | Unity Microphone API | Instant         | Low               |
+| **Audio Processing**   | ffmpeg               | <1 sec          | Medium            |
+| **Speech Recognition** | OpenAI Whisper       | 2-3 sec         | High (first time) |
+| **LLM Processing**     | Ollama Llama2        | 1-2 sec         | Medium            |
+| **Drone Control**      | Unity Engine         | Instant         | Low               |
 
 ### 🔧 Configuration Files
 
@@ -678,6 +732,7 @@ The Unity drone controller runs an HTTP server on port 5005 that receives comman
 ## 🚀 Future Enhancements
 
 ### 🎯 Planned Features
+
 - **🎥 Object Detection** - Computer vision for obstacle avoidance
 - **📊 Telemetry Logging** - Flight data recording and analysis
 - **🎮 Multi-Drone Control** - Coordinate multiple drones
@@ -685,6 +740,7 @@ The Unity drone controller runs an HTTP server on port 5005 that receives comman
 - **🌐 Multi-Language Support** - Extended Whisper language models
 
 ### 🔧 Technical Improvements
+
 - **⚡ Performance Optimization** - Reduce latency and resource usage
 - **🛡️ Error Recovery** - Enhanced fault tolerance
 - **📱 Mobile Support** - iOS/Android deployment
@@ -693,15 +749,18 @@ The Unity drone controller runs an HTTP server on port 5005 that receives comman
 ## 📝 License & Credits
 
 ### License
+
 This project is for educational and research purposes. Feel free to modify and extend!
 
 ### 🙏 Credits
+
 - **🎤 OpenAI Whisper** - Industry-leading speech recognition
 - **🤖 Ollama** - Local LLM deployment made easy
 - **🎮 Unity Technologies** - Powerful game engine
 - **🐍 Python Community** - Flask, requests, and ecosystem
 
 ### 📞 Support
+
 - **Unity Console** - Real-time error messages and transcription feedback
 - **Python Logs** - Detailed service processing information
 - **Health Endpoint** - System status monitoring

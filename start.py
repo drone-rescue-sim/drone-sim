@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!python
 """
 Drone Simulation Services Startup Script
 Starts both LLM service and Whisper integration for voice control
@@ -10,6 +10,7 @@ import os
 import time
 import signal
 import requests
+import platform
 from pathlib import Path
 
 class DroneServices:
@@ -17,6 +18,7 @@ class DroneServices:
         self.project_root = Path(__file__).parent
         self.llm_process = None
         self.ollama_process = None
+        self.tobii_process = None
 
     def print_status(self, message: str, color: str = "green"):
         """Print colored status message"""
@@ -39,9 +41,9 @@ class DroneServices:
             import requests
             import ollama
             import whisper
-            self.print_status("✅ Python dependencies OK")
+            self.print_status(" Python dependencies OK")
         except ImportError as e:
-            self.print_status(f"❌ Missing Python dependency: {e}", "red")
+            self.print_status(f" Missing Python dependency: {e}", "red")
             self.print_status("Install with: pip install -r requirements.txt", "yellow")
             return False
 
@@ -49,12 +51,21 @@ class DroneServices:
         try:
             result = subprocess.run(['ffmpeg', '-version'], capture_output=True, text=True)
             if result.returncode == 0:
-                self.print_status("✅ ffmpeg available")
+                self.print_status(" ffmpeg available")
             else:
                 raise FileNotFoundError
         except FileNotFoundError:
-            self.print_status("❌ ffmpeg not found", "red")
-            self.print_status("Install with: brew install ffmpeg", "yellow")
+            self.print_status(" ffmpeg not found", "red")
+
+            install_msg = ""
+            if platform.system() == "Darwin":   # macOS
+                install_msg = "brew install ffmpeg"
+            elif platform.system() == "Windows":
+                install_msg = "choco install ffmpeg   (eller last ned fra https://ffmpeg.org/download.html)"
+            else:  # Linux
+                install_msg = "sudo apt-get install ffmpeg"
+
+            self.print_status(f"Install with: {install_msg}", "yellow")
             return False
 
         return True
@@ -67,7 +78,7 @@ class DroneServices:
             # Check if Ollama is already running
             response = requests.get("http://127.0.0.1:11434/api/tags", timeout=5)
             if response.status_code == 200:
-                self.print_status("✅ Ollama already running")
+                self.print_status(" Ollama already running")
                 return True
         except:
             pass
@@ -84,18 +95,18 @@ class DroneServices:
             # Verify it's running
             response = requests.get("http://127.0.0.1:11434/api/tags", timeout=5)
             if response.status_code == 200:
-                self.print_status("✅ Ollama started successfully")
+                self.print_status(" Ollama started successfully")
                 return True
             else:
-                self.print_status("❌ Ollama failed to start properly", "red")
+                self.print_status(" Ollama failed to start properly", "red")
                 return False
 
         except FileNotFoundError:
-            self.print_status("❌ Ollama not installed", "red")
+            self.print_status(" Ollama not installed", "red")
             self.print_status("Install from: https://ollama.ai/download", "yellow")
             return False
         except Exception as e:
-            self.print_status(f"❌ Failed to start Ollama: {e}", "red")
+            self.print_status(f" Failed to start Ollama: {e}", "red")
             return False
 
     def pull_llama_model(self):
@@ -109,62 +120,98 @@ class DroneServices:
                 models = response.json().get('models', [])
                 model_names = [m['name'] for m in models]
                 if 'llama2' in ' '.join(model_names):
-                    self.print_status("✅ Llama2 model available")
+                    self.print_status(" Llama2 model available")
                     return True
 
             # Pull model
-            self.print_status("📥 Pulling Llama2 model (this may take a few minutes)...")
+            self.print_status(" Pulling Llama2 model (this may take a few minutes)...")
             subprocess.run(['ollama', 'pull', 'llama2'], check=True)
-            self.print_status("✅ Llama2 model ready")
+            self.print_status("Llama2 model ready")
             return True
 
         except subprocess.CalledProcessError:
-            self.print_status("❌ Failed to pull Llama2 model", "red")
+            self.print_status(" Failed to pull Llama2 model", "red")
             return False
         except Exception as e:
-            self.print_status(f"❌ Error checking model: {e}", "red")
+            self.print_status(f" Error checking model: {e}", "red")
             return False
 
     def start_llm_service(self):
         """Start the LLM HTTP service"""
         self.print_status("Starting LLM HTTP Service...")
 
-        # Check if port 5006 is available
-        import socket
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            try:
-                s.bind(('', 5006))
-            except OSError:
-                self.print_status("❌ Port 5006 already in use", "red")
-                self.print_status("Stop other services or kill process on port 5006", "yellow")
-                return False
-
         # Start LLM service
         try:
             os.chdir(self.project_root / "services" / "llm")
-            self.llm_process = subprocess.Popen(
-                [sys.executable, 'http_service.py'],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            )
+            self.llm_process = subprocess.Popen([sys.executable, 'http_service.py'])
 
-            # Wait for service to start
-            time.sleep(3)
+            # Poll health endpoint for up to 30 seconds (Flask debug reloader on Windows can delay readiness)
+            start_time = time.time()
+            last_error = None
+            while time.time() - start_time < 30:
+                try:
+                    response = requests.get("http://127.0.0.1:5006/health", timeout=2)
+                    if response.status_code == 200:
+                        health = response.json()
+                        self.print_status(" LLM HTTP Service started")
+                        self.print_status(f"   Ollama: {'success' if health.get('ollama_available') else 'x'}")
+                        self.print_status(f"    Whisper: {'success' if health.get('whisper_available') else 'x'}")
+                        return True
+                except Exception as e:
+                    last_error = e
 
-            # Test health endpoint
-            response = requests.get("http://127.0.0.1:5006/health", timeout=5)
-            if response.status_code == 200:
-                health = response.json()
-                self.print_status("✅ LLM HTTP Service started")
-                self.print_status(f"   📊 Ollama: {'✅' if health.get('ollama_available') else '❌'}")
-                self.print_status(f"   🎤 Whisper: {'✅' if health.get('whisper_available') else '❌'}")
-                return True
-            else:
-                self.print_status("❌ LLM service health check failed", "red")
-                return False
+                # If the child process exited, abort early
+                if self.llm_process.poll() is not None:
+                    break
+
+                time.sleep(1)
+
+            self.print_status(" LLM service health check failed to become ready in time", "red")
+            if last_error:
+                self.print_status(f"  Last error: {last_error}", "yellow")
+            return False
 
         except Exception as e:
-            self.print_status(f"❌ Failed to start LLM service: {e}", "red")
+            self.print_status(f" Failed to start LLM service: {e}", "red")
+            return False
+        finally:
+            os.chdir(self.project_root)
+
+    def start_tobii_service(self):
+        """Start the Tobii HTTP service"""
+        self.print_status("Starting Tobii HTTP Service...")
+        try:
+            # Quick import check in this interpreter for clearer error message
+            try:
+                import tobii_research  # noqa: F401
+            except Exception as e:
+                self.print_status(" Tobii SDK not available: install 'tobii_research'", "red")
+                self.print_status(f"  Error: {e}", "yellow")
+                return False
+
+            os.chdir(self.project_root / "services" / "tobii")
+            self.tobii_process = subprocess.Popen([sys.executable, 'http_service.py'])
+
+            start_time = time.time()
+            last_error = None
+            while time.time() - start_time < 20:
+                try:
+                    r = requests.get("http://127.0.0.1:5007/health", timeout=2)
+                    if r.status_code == 200:
+                        self.print_status(" Tobii HTTP Service started")
+                        return True
+                except Exception as e:
+                    last_error = e
+                if self.tobii_process.poll() is not None:
+                    break
+                time.sleep(1)
+
+            self.print_status(" Tobii service did not become ready in time", "red")
+            if last_error:
+                self.print_status(f"  Last error: {last_error}", "yellow")
+            return False
+        except Exception as e:
+            self.print_status(f" Failed to start Tobii service: {e}", "red")
             return False
         finally:
             os.chdir(self.project_root)
@@ -177,19 +224,28 @@ class DroneServices:
             try:
                 self.llm_process.terminate()
                 self.llm_process.wait(timeout=5)
-                self.print_status("✅ LLM service stopped")
+                self.print_status(" LLM service stopped")
             except:
                 self.llm_process.kill()
-                self.print_status("⚠️ LLM service force killed")
+                self.print_status(" LLM service force killed")
 
         if self.ollama_process:
             try:
                 self.ollama_process.terminate()
                 self.ollama_process.wait(timeout=5)
-                self.print_status("✅ Ollama stopped")
+                self.print_status(" Ollama stopped")
             except:
                 self.ollama_process.kill()
-                self.print_status("⚠️ Ollama force killed")
+                self.print_status(" Ollama force killed")
+
+        if self.tobii_process:
+            try:
+                self.tobii_process.terminate()
+                self.tobii_process.wait(timeout=5)
+                self.print_status(" Tobii service stopped")
+            except:
+                self.tobii_process.kill()
+                self.print_status(" Tobii service force killed")
 
     def show_status(self):
         """Show current service status"""
@@ -201,35 +257,36 @@ class DroneServices:
         try:
             response = requests.get("http://127.0.0.1:11434/api/tags", timeout=2)
             if response.status_code == 200:
-                print("🧠 Ollama:          ✅ RUNNING")
+                print(" Ollama:           RUNNING")
             else:
-                print("🧠 Ollama:          ❌ NOT RESPONDING")
+                print(" Ollama:           NOT RESPONDING")
         except:
-            print("🧠 Ollama:          ❌ NOT RUNNING")
+            print(" Ollama:           NOT RUNNING")
 
         # Check LLM service
         try:
             response = requests.get("http://127.0.0.1:5006/health", timeout=2)
             if response.status_code == 200:
                 health = response.json()
-                print("🤖 LLM Service:     ✅ RUNNING")
-                print(f"   📊 Ollama:       {'✅' if health.get('ollama_available') else '❌'}")
-                print(f"   🎤 Whisper:      {'✅' if health.get('whisper_available') else '❌'}")
+                print(" LLM Service:      RUNNING")
+                print(f"   Ollama:       {'success' if health.get('ollama_available') else 'x'}")
+                print(f"    Whisper:      {'success' if health.get('whisper_available') else 'x'}")
             else:
-                print("🤖 LLM Service:     ❌ NOT RESPONDING")
+                print(" LLM Service:      NOT RESPONDING")
         except:
-            print("🤖 LLM Service:     ❌ NOT RUNNING")
+            print(" LLM Service:      NOT RUNNING")
 
         # Show URLs
-        print("\n📡 Service URLs:")
+        print("\n Service URLs:")
         print("   LLM Service:     http://127.0.0.1:5006")
         print("   Unity Control:   http://127.0.0.1:5005")
         print("   Ollama API:      http://127.0.0.1:11434")
+        print("   Tobii Service:   http://127.0.0.1:5007")
 
     def run(self):
         """Main run function"""
         print("="*60)
-        self.print_status("🚁 DRONE SIMULATION SERVICES STARTUP", "blue")
+        self.print_status(" DRONE SIMULATION SERVICES STARTUP", "blue")
         print("="*60)
         print("Starting LLM service with Whisper voice integration")
         print()
@@ -250,19 +307,22 @@ class DroneServices:
         if success and not self.start_llm_service():
             success = False
 
+        if success and not self.start_tobii_service():
+            self.print_status(" Tobii service optional: continuing without it", "yellow")
+
         if success:
             print("\n" + "="*60)
-            self.print_status("🎉 ALL SERVICES STARTED SUCCESSFULLY!", "blue")
+            self.print_status(" ALL SERVICES STARTED SUCCESSFULLY!", "blue")
             print("="*60)
 
             self.show_status()
 
-            print("\n🚀 Next Steps:")
+            print("\n Next Steps:")
             print("1. Open Unity and load your drone scene")
             print("2. Press TAB to open command interface")
-            print("3. Type text commands or click 🎤 for voice")
+            print("3. Type text commands or click for voice")
             print("4. Say commands like 'fly forward' or 'go up'")
-            print("\n⚡ Press Ctrl+C to stop all services")
+            print("\n Press Ctrl+C to stop all services")
 
             # Keep running
             try:
@@ -271,7 +331,7 @@ class DroneServices:
             except KeyboardInterrupt:
                 self.print_status("Shutting down services...")
                 self.stop_services()
-                self.print_status("✅ All services stopped")
+                self.print_status("All services stopped")
 
         return success
 

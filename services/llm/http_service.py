@@ -4,6 +4,7 @@ import tempfile
 import os
 import subprocess
 import json
+import sys
 from main import get_drone_instructions, send_to_unity
 
 app = Flask(__name__)
@@ -70,15 +71,15 @@ def process_audio_command():
             file_size = os.path.getsize(temp_audio_path)
             print(f"📊 Audio file size: {file_size} bytes")
 
-            # Run whisper command with longer timeout (5 minutes for first model download)
+            # Run whisper via Python module runner to avoid PATH issues on Windows
             print("🚀 Starting Whisper transcription (this may take a while on first run)...")
             result = subprocess.run([
-                'whisper', temp_audio_path,
-                '--model', 'tiny',  # Use smaller, faster model
+                sys.executable, '-m', 'whisper', temp_audio_path,
+                '--model', 'tiny',
                 '--output_format', 'json',
                 '--output_dir', tempfile.gettempdir(),
-                '--verbose', 'True'  # Add verbose output
-            ], capture_output=True, text=True, timeout=300)  # 5 minute timeout
+                '--verbose', 'True'
+            ], capture_output=True, text=True, timeout=300)
 
             if result.returncode != 0:
                 print(f"❌ Whisper error: {result.stderr}")
@@ -154,7 +155,7 @@ def health():
     """
     # Check if whisper is available
     try:
-        result = subprocess.run(['whisper', '--help'], capture_output=True, text=True, timeout=5)
+        result = subprocess.run([sys.executable, '-m', 'whisper', '--help'], capture_output=True, text=True, timeout=5)
         whisper_available = result.returncode == 0
     except:
         whisper_available = False
