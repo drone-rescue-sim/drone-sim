@@ -23,8 +23,8 @@ public class EyeTrackingSimulator : MonoBehaviour
             // Flytt markøren dit
             gazeMarker.transform.position = hit.point;
 
-            // Debug i Console
-            Debug.Log("Ser på: " + hit.collider.name + " på posisjon: " + hit.point);
+            // Clean console logging
+            Debug.Log($"👁️ Looking at: {hit.collider.name} | Distance: {hit.distance:F1}m | Position: {hit.point}");
 
         }
     }

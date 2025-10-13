@@ -19,9 +19,9 @@ public class GazeRayInteractor : MonoBehaviour
     [Tooltip("Enable/disable hover target logging to console.")]
     public bool logHover = true;
     [Tooltip("Include distance in hover logs.")]
-    public bool includeDistance = false;
+    public bool includeDistance = true;
     [Tooltip("Only log when mouse is directly over an object (not just raycast hits).")]
-    public bool preciseMouseLogging = true;
+    public bool preciseMouseLogging = false;
 
     [Header("Debug Visualization")]
     [Tooltip("Show ray and hit point gizmos in Scene view.")]
@@ -31,9 +31,9 @@ public class GazeRayInteractor : MonoBehaviour
 
     [Header("Filtering")]
     [Tooltip("Objects with these tags will be ignored for hover logging.")]
-    public string[] ignoredTags = { "Untagged", "Ground", "Floor", "Terrain" };
+    public string[] ignoredTags = { "Ground", "Floor", "Terrain" };
     [Tooltip("Maximum distance to consider for hover logging (objects too far won't be logged).")]
-    public float maxHoverDistance = 50f;
+    public float maxHoverDistance = 100f;
 
     private GameObject _currentTarget;
     private GameObject _lastHoverTarget; // For de-duplication
@@ -72,53 +72,60 @@ public class GazeRayInteractor : MonoBehaviour
         // Check if object is too far away for meaningful hover detection
         if (hit.distance > maxHoverDistance)
         {
-            if (debugMode)
-            {
-                Debug.Log($"Ignoring '{target.name}' - too far away ({hit.distance:F2}m > {maxHoverDistance}m)");
-            }
-            return;
+            return; // Silently ignore objects that are too far away
         }
 
         // If precise logging is enabled, only log objects that are not ignored
         if (preciseMouseLogging && ShouldIgnoreObject(target))
         {
-            if (debugMode)
-            {
-                Debug.Log($"Precise logging: Ignoring '{target.name}' (tag: '{target.tag}') - not meaningful enough");
-            }
-            return;
+            return; // Silently ignore objects that aren't meaningful enough
         }
 
         _lastHoverTarget = target;
         
-        // Use the GameObject's tag for logging
-        string displayText = target.tag;
+        // Get display name - try to use HoverLabel component first, then tag, then name
+        string displayText = GetDisplayName(target);
 
-        // Build the log message
-        string logMessage = $"Hover: {displayText}";
+        // Build a clean, concise log message
+        string logMessage = $"👁️ Looking at: {displayText}";
         
-        if (includeDistance)
-        {
-            logMessage += $" (dist: {hit.distance:F2}m)";
-        }
+        // Always include distance for now to debug
+        logMessage += $" [{hit.distance:F1}m]";
+
+        // Add mouse position for reference
+        Vector2 mousePos = Input.mousePosition;
+        logMessage += $" | Mouse: ({mousePos.x:F0}, {mousePos.y:F0})";
 
         Debug.Log(logMessage);
-        
-        if (debugMode)
+    }
+
+    /// <summary>
+    /// Gets a clean display name for the target object.
+    /// Priority: HoverLabel display text > tag > object name
+    /// </summary>
+    private string GetDisplayName(GameObject target)
+    {
+        // First, try to get display text from HoverLabel component
+        HoverLabel hoverLabel = target.GetComponent<HoverLabel>();
+        if (hoverLabel != null)
         {
-            Debug.Log($"DEBUG - Object: {target.name}, Tag: {target.tag}, Distance: {hit.distance:F2}m");
+            return hoverLabel.GetDisplayText();
         }
+
+        // Fall back to tag if it's meaningful
+        if (!string.IsNullOrEmpty(target.tag) && target.tag != "Untagged")
+        {
+            return target.tag;
+        }
+
+        // Finally, use the object name
+        return target.name;
     }
 
     void Update()
     {
         // 1) Use mouse position as fake gaze input (works on macOS, Windows, Linux)
         Vector2 screen = Input.mousePosition;
-        
-        if (debugMode && Time.frameCount % 60 == 0) // Log every 60 frames to avoid spam
-        {
-            Debug.Log($"Mouse Position: {screen}, Screen Size: {Screen.width}x{Screen.height}");
-        }
 
         // 2) Smooth the movement
         float k = (smoothTime <= 0f) ? 1f :
@@ -129,27 +136,17 @@ public class GazeRayInteractor : MonoBehaviour
         var cam = Camera.main;
         if (!cam) 
         {
-            if (debugMode && Time.frameCount % 60 == 0)
-                Debug.LogWarning("No Camera.main found! Make sure your camera has the 'MainCamera' tag.");
+            if (debugMode && Time.frameCount % 300 == 0) // Only warn every 5 seconds instead of every second
+                Debug.LogWarning("⚠️ No Camera.main found! Make sure your camera has the 'MainCamera' tag.");
             return;
         }
 
         Ray ray = cam.ScreenPointToRay(_smoothedScreen);
         
-        if (debugMode && Time.frameCount % 60 == 0)
-        {
-            Debug.Log($"Ray: origin={ray.origin}, direction={ray.direction}, maxDistance={maxDistance}");
-        }
-        
         if (Physics.Raycast(ray, out RaycastHit hit, maxDistance, interactableLayers.value))
         {
             // Store hit information for gizmos and distance logging
             _lastHit = hit;
-            
-            if (debugMode && Time.frameCount % 60 == 0)
-            {
-                Debug.Log($"Raycast HIT: {hit.collider.gameObject.name} (tag: {hit.collider.gameObject.tag}) at distance {hit.distance:F2}m");
-            }
             
             if (hit.collider.gameObject != _currentTarget)
             {
@@ -191,11 +188,7 @@ public class GazeRayInteractor : MonoBehaviour
         }
         else
         {
-            if (debugMode && Time.frameCount % 60 == 0)
-            {
-                Debug.Log("Raycast MISS - no objects hit");
-            }
-            
+            // No objects hit - clear current target
             if (_currentTarget)
             {
                 _currentTarget.SendMessage("OnGazeExit", SendMessageOptions.DontRequireReceiver);
