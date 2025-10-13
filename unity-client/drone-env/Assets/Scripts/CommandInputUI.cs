@@ -35,6 +35,9 @@ public class CommandInputUI : MonoBehaviour
     private InputAction toggleAction;
     private static readonly HttpClient textHttpClient = new HttpClient();
     private const string LLM_SERVICE_URL = "http://127.0.0.1:5006/process_command";
+    
+    // Static reference for other scripts to check if UI is visible
+    public static bool IsUIVisible { get; private set; } = false;
 
     // Voice recording variables
     private bool isRecording = false;
@@ -103,6 +106,7 @@ public class CommandInputUI : MonoBehaviour
         {
             commandCanvas.gameObject.SetActive(true);
             isVisible = true;
+            IsUIVisible = true; // Update static reference
 
             if (commandInput != null)
             {
@@ -118,6 +122,7 @@ public class CommandInputUI : MonoBehaviour
         {
             commandCanvas.gameObject.SetActive(false);
             isVisible = false;
+            IsUIVisible = false; // Update static reference
         }
     }
 
@@ -332,28 +337,49 @@ public class CommandInputUI : MonoBehaviour
     {
         try
         {
-            Debug.Log($"Sending command: {command}");
+            Debug.Log($"🚀 [LLM] Sending command to LLM service: '{command}'");
+            Debug.Log($"🌐 [LLM] Target URL: {LLM_SERVICE_URL}");
 
             var payload = new CommandPayload { command = command };
             string jsonPayload = JsonUtility.ToJson(payload);
+            Debug.Log($"📤 [LLM] JSON payload: {jsonPayload}");
+            
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
 
+            Debug.Log($"⏳ [LLM] Waiting for LLM service response...");
             HttpResponseMessage response = await textHttpClient.PostAsync(LLM_SERVICE_URL, content);
+
+            Debug.Log($"📊 [LLM] Response status: {response.StatusCode}");
 
             if (response.IsSuccessStatusCode)
             {
                 string responseContent = await response.Content.ReadAsStringAsync();
-                Debug.Log($"LLM service responded: {responseContent}");
+                Debug.Log($"✅ [LLM] Service responded successfully: {responseContent}");
+                
+                // Try to parse the response to show extracted commands
+                try
+                {
+                    var llmResponse = JsonUtility.FromJson<LLMResponse>(responseContent);
+                    if (llmResponse != null && llmResponse.commands != null)
+                    {
+                        Debug.Log($"🎯 [LLM] Extracted commands: [{string.Join(", ", llmResponse.commands)}]");
+                    }
+                }
+                catch (System.Exception parseEx)
+                {
+                    Debug.LogWarning($"⚠️ [LLM] Could not parse response as JSON: {parseEx.Message}");
+                }
             }
             else
             {
                 string errorContent = await response.Content.ReadAsStringAsync();
-                Debug.LogError($"LLM service error: {errorContent}");
+                Debug.LogError($"❌ [LLM] Service error ({response.StatusCode}): {errorContent}");
             }
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"Failed to send command: {e.Message}");
+            Debug.LogError($"💥 [LLM] Failed to send command: {e.Message}");
+            Debug.LogError($"🔍 [LLM] Exception details: {e}");
         }
     }
 
@@ -361,6 +387,14 @@ public class CommandInputUI : MonoBehaviour
     private class CommandPayload
     {
         public string command;
+    }
+
+    [System.Serializable]
+    private class LLMResponse
+    {
+        public string status;
+        public string[] commands;
+        public string error;
     }
 
     [System.Serializable]

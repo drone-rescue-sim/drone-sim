@@ -79,13 +79,15 @@ public class GazeRayInteractor : MonoBehaviour
             return;
         }
 
+        // Only process objects that have meaningful tags (not "Untagged")
+        if (target.tag == "Untagged")
+        {
+            return;
+        }
+
         // If precise logging is enabled, only log objects that are not ignored
         if (preciseMouseLogging && ShouldIgnoreObject(target))
         {
-            if (debugMode)
-            {
-                Debug.Log($"Precise logging: Ignoring '{target.name}' (tag: '{target.tag}') - not meaningful enough");
-            }
             return;
         }
 
@@ -108,6 +110,40 @@ public class GazeRayInteractor : MonoBehaviour
         {
             Debug.Log($"DEBUG - Object: {target.name}, Tag: {target.tag}, Distance: {hit.distance:F2}m");
         }
+
+        // Add to gaze history (only objects with meaningful tags)
+        if (GazeHistoryManager.Instance != null)
+        {
+            // Store the object's actual position, not the raycast hit point
+            bool wasAdded = GazeHistoryManager.Instance.AddViewedObject(target, target.transform.position, target.transform.rotation, hit.distance);
+            if (wasAdded)
+            {
+                Debug.Log($"✅ Added to gaze history: {target.name} (tag: {target.tag}) at {target.transform.position}");
+                // Print the current list of tracked objects
+                GazeHistoryManager.Instance.PrintTrackedObjects();
+            }
+            else
+            {
+                Debug.Log($"❌ NOT added to gaze history: {target.name} (tag: {target.tag}) - likely duplicate within cooldown period");
+            }
+        }
+        else
+        {
+            // Auto-create GazeHistoryManager if it doesn't exist
+            Debug.LogWarning("GazeHistoryManager.Instance is null - creating one automatically");
+            GameObject gazeHistoryGO = new GameObject("GazeHistoryManager");
+            gazeHistoryGO.AddComponent<GazeHistoryManager>();
+            
+            // Try to add the object again
+            if (GazeHistoryManager.Instance != null)
+            {
+                bool wasAdded = GazeHistoryManager.Instance.AddViewedObject(target, target.transform.position, target.transform.rotation, hit.distance);
+                if (wasAdded)
+                {
+                    Debug.Log($"✅ Added to gaze history after auto-creation: {target.name} (tag: {target.tag}) at {target.transform.position}");
+                }
+            }
+        }
     }
 
     void Update()
@@ -115,10 +151,7 @@ public class GazeRayInteractor : MonoBehaviour
         // 1) Use mouse position as fake gaze input (works on macOS, Windows, Linux)
         Vector2 screen = Input.mousePosition;
         
-        if (debugMode && Time.frameCount % 60 == 0) // Log every 60 frames to avoid spam
-        {
-            Debug.Log($"Mouse Position: {screen}, Screen Size: {Screen.width}x{Screen.height}");
-        }
+        // Removed debug logging for mouse position
 
         // 2) Smooth the movement
         float k = (smoothTime <= 0f) ? 1f :
@@ -136,20 +169,14 @@ public class GazeRayInteractor : MonoBehaviour
 
         Ray ray = cam.ScreenPointToRay(_smoothedScreen);
         
-        if (debugMode && Time.frameCount % 60 == 0)
-        {
-            Debug.Log($"Ray: origin={ray.origin}, direction={ray.direction}, maxDistance={maxDistance}");
-        }
+        // Removed debug logging for ray information
         
         if (Physics.Raycast(ray, out RaycastHit hit, maxDistance, interactableLayers.value))
         {
             // Store hit information for gizmos and distance logging
             _lastHit = hit;
             
-            if (debugMode && Time.frameCount % 60 == 0)
-            {
-                Debug.Log($"Raycast HIT: {hit.collider.gameObject.name} (tag: {hit.collider.gameObject.tag}) at distance {hit.distance:F2}m");
-            }
+            // Removed debug logging for raycast hits (only log new objects in LogHoverTarget)
             
             if (hit.collider.gameObject != _currentTarget)
             {
@@ -191,10 +218,7 @@ public class GazeRayInteractor : MonoBehaviour
         }
         else
         {
-            if (debugMode && Time.frameCount % 60 == 0)
-            {
-                Debug.Log("Raycast MISS - no objects hit");
-            }
+            // Removed debug logging for raycast misses
             
             if (_currentTarget)
             {

@@ -1,54 +1,159 @@
 import ollama
 import requests  # for HTTP requests
+import os
+import json
+from dotenv import load_dotenv
+
+# Load environment variables from config.env
+load_dotenv('config.env')
 
 # Unity HTTP endpoint
-UNITY_URL = "http://127.0.0.1:5005/"  # Unity listens on this endpoint 
+UNITY_URL = "http://127.0.0.1:5005/"  # Unity listens on this endpoint
 
-def get_drone_instructions(user_input):
+# LLM Configuration
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama")  # "ollama" or "openai"
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama2")
+
+def call_ollama(system_prompt, user_input):
     """
-    Process user input using an LLM to generate drone instructions.
+    Call Ollama API with the given prompts
     """
     try:
-        # Improved system prompt with specific commands and examples
-        system_prompt = """You are a drone control assistant for Unity. Translate user instructions into drone movement commands.
-
-Available commands:
-- move_forward: Move the drone forward
-- move_backward: Move the drone backward
-- move_left: Move the drone left
-- move_right: Move the drone right
-- ascend or go_up: Move the drone up
-- descend or go_down: Move the drone down
-- turn_left: Rotate the drone left
-- turn_right: Rotate the drone right
-- stop: Stop all movement
-
-Instructions:
-1. Respond with a JSON array of commands, e.g., ["move_forward", "ascend"]
-2. Use exactly the command names listed above
-3. If the user gives multiple instructions, include all relevant commands
-4. If the user gives a single instruction, return a single-element array
-5. If unsure, respond with ["stop"]
-
-Examples:
-User: "fly forward" -> ["move_forward"]
-User: "go up in the air" -> ["ascend"]
-User: "turn around" -> ["turn_left"]
-User: "move to the right" -> ["move_right"]
-User: "hover in place" -> ["stop"]
-User: "fly forward and go up" -> ["move_forward", "ascend"]
-User: "turn left and move forward" -> ["turn_left", "move_forward"]
-User: "go up and turn right" -> ["ascend", "turn_right"]
-"""
-
+        print(f"🔄 Calling Ollama with model: {OLLAMA_MODEL}")
         response = ollama.chat(
-            model="llama2",
+            model=OLLAMA_MODEL,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_input}
             ]
         )
-        instructions = response['message']['content']
+        return response['message']['content']
+    except Exception as e:
+        print(f"❌ Error calling Ollama: {e}")
+        print("💡 Make sure Ollama is running and the model is available:")
+        print(f"   ollama serve")
+        print(f"   ollama pull {OLLAMA_MODEL}")
+        return None
+
+def call_openai(system_prompt, user_input):
+    """
+    Call OpenAI API with the given prompts
+    """
+    try:
+        if not OPENAI_API_KEY:
+            print("❌ OpenAI API key not found. Set OPENAI_API_KEY environment variable.")
+            return None
+            
+        headers = {
+            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "model": OPENAI_MODEL,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_input}
+            ],
+            "stream": False      # Ensure non-streaming for faster processing
+        }
+        
+        # Add model-specific parameters
+        if OPENAI_MODEL.startswith("gpt-5"):
+            payload["max_completion_tokens"] = 50  # Use max_completion_tokens for newer models
+        else:
+            payload["max_tokens"] = 50  # Use max_tokens for older models
+            payload["temperature"] = 0.1  # Low temperature for consistent responses
+        
+        response = requests.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers=headers,
+            json=payload,
+            timeout=10  # Reduced timeout for faster response
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            return result['choices'][0]['message']['content']
+        else:
+            print(f"❌ OpenAI API error: {response.status_code}")
+            print(f"📄 Response: {response.text}")
+            if response.status_code == 401:
+                print("🔑 Authentication failed - check your API key")
+            elif response.status_code == 404:
+                print("🤖 Model not found - check your model name")
+            elif response.status_code == 429:
+                print("⏰ Rate limit exceeded - try again later")
+            return None
+            
+    except Exception as e:
+        print(f"Error calling OpenAI: {e}")
+        return None
+
+def get_drone_instructions(user_input, gaze_history=None):
+    """
+    Process user input using an LLM to generate drone instructions.
+    """
+    try:
+        # Get recent gaze history if not provided
+        if gaze_history is None:
+            from http_service import get_recent_gaze_history
+            gaze_history = get_recent_gaze_history(30)
+        
+        # Build gaze history context (shorter for faster processing)
+        gaze_context = ""
+        if gaze_history:
+            # Include full recent gaze history (capped at 30) with detailed fields
+            lines = []
+            for idx, obj in enumerate(gaze_history[:30], 1):
+                pos = obj.get('position', {})
+                rot = obj.get('rotation', {})
+                name = obj.get('name', 'Unknown')
+                tag = obj.get('tag', 'Untagged')
+                dist = obj.get('distance', 'Unknown')
+                ts = obj.get('timestamp', 'Unknown')
+                lines.append(
+                    f"{idx:02d}. name={name} tag={tag} pos=({pos.get('x',0):.2f},{pos.get('y',0):.2f},{pos.get('z',0):.2f}) "
+                    f"rot=({rot.get('x',0):.2f},{rot.get('y',0):.2f},{rot.get('z',0):.2f},{rot.get('w',0):.2f}) dist={dist} ts={ts}"
+                )
+            gaze_context = "\n\nRecent gaze objects (max 30):\n" + "\n".join(lines) + "\n"
+        
+        # Optimized system prompt for faster processing
+        system_prompt = f"""Drone control assistant. Return JSON array.{gaze_context}
+
+Commands: move_forward, move_backward, move_left, move_right, ascend, descend, turn_left, turn_right, stop, navigate_to_previous, navigate_to_object
+
+Rules:
+- Use navigate_to_object for specific names from objects list
+- Use navigate_to_previous for object types (e.g., Person)
+- Use the recent gaze objects list to disambiguate natural phrases; you do not need exact tag equality here
+- Return JSON array like ["move_forward"]
+
+Examples:
+"move forward" -> ["move_forward"]
+"move to Tree 1" -> ["navigate_to_object", "Tree 1"]
+"go to person" -> ["navigate_to_previous", "Person"]
+"move to elder female" -> ["navigate_to_previous", "Person"]
+"""
+
+        # Call the appropriate LLM provider
+        if LLM_PROVIDER.lower() == "openai":
+            print(f"🤖 Using OpenAI ({OPENAI_MODEL})")
+            instructions = call_openai(system_prompt, user_input)
+        else:
+            print(f"🤖 Using Ollama ({OLLAMA_MODEL})")
+            instructions = call_ollama(system_prompt, user_input)
+        
+        if not instructions:
+            print("❌ Failed to get response from LLM")
+            if LLM_PROVIDER.lower() == "openai":
+                print("💡 Check your OpenAI API key and model configuration")
+            else:
+                print("💡 Check if Ollama is running and the model is available")
+            print("🛑 Using 'stop' command as fallback")
+            return ["stop"]
 
         # Clean and validate the response
         command_text = instructions.strip()
@@ -62,18 +167,22 @@ User: "go up and turn right" -> ["ascend", "turn_right"]
             if not isinstance(commands, list):
                 commands = [commands]
             
-            # Validate each command
+            # Validate each command (including new navigation commands)
             valid_commands = [
                 "move_forward", "move_backward", "move_left", "move_right",
                 "ascend", "go_up", "descend", "go_down",
-                "turn_left", "turn_right", "stop"
+                "turn_left", "turn_right", "stop", "navigate_to_previous", "navigate_to_object"
             ]
             
             validated_commands = []
-            for cmd in commands:
+            for i, cmd in enumerate(commands):
                 cmd_lower = cmd.strip().lower()
                 if cmd_lower in valid_commands:
                     validated_commands.append(cmd_lower)
+                elif i > 0 and validated_commands and validated_commands[-1] in ["navigate_to_previous", "navigate_to_object"]:
+                    # This is likely an object name/type for navigation commands
+                    validated_commands.append(cmd.strip())  # Keep original case for object names
+                    print(f"Added object name for navigation: {cmd}")
                 else:
                     print(f"Invalid command in array: {cmd}, skipping")
             
@@ -89,7 +198,7 @@ User: "go up and turn right" -> ["ascend", "turn_right"]
             valid_commands = [
                 "move_forward", "move_backward", "move_left", "move_right",
                 "ascend", "go_up", "descend", "go_down",
-                "turn_left", "turn_right", "stop"
+                "turn_left", "turn_right", "stop", "navigate_to_previous", "navigate_to_object"
             ]
             
             if command in valid_commands:
@@ -132,8 +241,35 @@ def send_to_unity(commands):
         print(f"✗ Error sending to Unity: {e}")
         return False
 
+def test_llm_connection():
+    """
+    Test the LLM connection with a simple command
+    """
+    print("🧪 Testing LLM connection...")
+    test_result = get_drone_instructions("move forward")
+    if test_result and test_result != ["stop"]:
+        print(f"✅ LLM connection successful! Test result: {test_result}")
+        return True
+    else:
+        print("❌ LLM connection failed!")
+        return False
+
 def main():
     print("🤖 Drone Control LLM Service Started")
+    print(f"🔧 LLM Provider: {LLM_PROVIDER.upper()}")
+    if LLM_PROVIDER.lower() == "openai":
+        print(f"🤖 OpenAI Model: {OPENAI_MODEL}")
+        if not OPENAI_API_KEY:
+            print("⚠️  Warning: OPENAI_API_KEY not set. Set it as environment variable.")
+            print("   export OPENAI_API_KEY=your_api_key_here")
+    else:
+        print(f"🤖 Ollama Model: {OLLAMA_MODEL}")
+    
+    # Test connection
+    if not test_llm_connection():
+        print("💡 Please check your LLM configuration and try again.")
+        return
+    
     print("Commands: Type natural language instructions for the drone")
     print("Examples: 'fly forward', 'go up', 'turn left', 'stop', 'exit'")
     print("-" * 50)
