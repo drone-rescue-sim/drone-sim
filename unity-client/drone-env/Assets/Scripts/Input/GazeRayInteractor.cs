@@ -82,7 +82,7 @@ public class GazeRayInteractor : MonoBehaviour
     }
 
     /// <summary>
-    /// DEMO EXPLANATION: Console Logging Function
+    /// Console Logging Function
     /// 
     /// This function creates the clean console output that shows:
     /// - What object the user is looking at
@@ -97,13 +97,13 @@ public class GazeRayInteractor : MonoBehaviour
         if (!logHover || target == _lastHoverTarget)
             return;
 
-        // DEMO: Filter out objects that are too far away (not meaningful for gaze tracking)
+        // Filter out objects that are too far away (not meaningful for gaze tracking)
         if (hit.distance > maxHoverDistance)
         {
             return; // Silently ignore objects that are too far away
         }
 
-        // DEMO: Filter out uninteresting objects (ground, terrain, etc.)
+        // Filter out uninteresting objects (ground, terrain, etc.)
         if (preciseMouseLogging && ShouldIgnoreObject(target))
         {
             return; // Silently ignore objects that aren't meaningful enough
@@ -111,11 +111,11 @@ public class GazeRayInteractor : MonoBehaviour
 
         _lastHoverTarget = target;
         
-        // DEMO: Get a nice display name for the object
+        // Get a nice display name for the object
         // Priority: HoverLabel component > Unity tag > object name
         string displayText = GetDisplayName(target);
 
-        // DEMO: Build the console message with all relevant information
+        // Build the console message with all relevant information
         string logMessage = $"👁️ Looking at: {displayText}";
         
         // Include distance to show how far away the object is
@@ -153,17 +153,17 @@ public class GazeRayInteractor : MonoBehaviour
 
     void Update()
     {
-        // DEMO STEP 1: Get mouse position as "gaze point"
+        // 1: Get mouse position as "gaze point"
         // This simulates where the user is looking with their eyes
         Vector2 screen = Input.mousePosition;
 
-        // DEMO STEP 2: Smooth mouse movement for natural eye tracking feel
+        // 2: Smooth mouse movement for natural eye tracking feel
         // Real eye movement isn't jittery like mouse movement, so we smooth it
         float k = (smoothTime <= 0f) ? 1f :
             1f - Mathf.Exp(-Time.unscaledDeltaTime / Mathf.Max(0.0001f, smoothTime));
         _smoothedScreen = Vector2.Lerp(_smoothedScreen, screen, k);
 
-        // DEMO STEP 3: Convert 2D screen position to 3D ray from camera
+        // 3: Convert 2D screen position to 3D ray from camera
         // This creates a "line of sight" from the camera through the mouse position
         var cam = Camera.main;
         if (!cam) 
@@ -175,13 +175,13 @@ public class GazeRayInteractor : MonoBehaviour
 
         Ray ray = cam.ScreenPointToRay(_smoothedScreen);
         
-        // DEMO STEP 4: Cast ray into 3D world to see what we're "looking at"
+        // 4: Cast ray into 3D world to see what we're "looking at"
         if (Physics.Raycast(ray, out RaycastHit hit, maxDistance, interactableLayers.value))
         {
             // Store hit information for visual feedback and logging
             _lastHit = hit;
             
-            // DEMO STEP 5: Handle gaze enter/exit events
+            // 5: Handle gaze enter/exit events
             // When we start looking at a new object, trigger events
             if (hit.collider.gameObject != _currentTarget)
             {
@@ -193,14 +193,14 @@ public class GazeRayInteractor : MonoBehaviour
                 _currentTarget = hit.collider.gameObject;
                 _currentTarget.SendMessage("OnGazeEnter", SendMessageOptions.DontRequireReceiver);
 
-                // DEMO STEP 6: Log what we're looking at with distance and mouse position
+                // 6: Log what we're looking at with distance and mouse position
                 LogHoverTarget(_currentTarget, hit);
 
                 _dwellTimer = 0f;
                 _lastScreen = screen;
             }
 
-            // DEMO STEP 7: Handle manual clicking with Spacebar
+            // 7: Handle manual clicking with Spacebar
             // This simulates "clicking" on what you're looking at
             if (Input.GetKeyDown(KeyCode.Space))
             {

@@ -39,10 +39,10 @@ public class SimpleInteractiveSetup : MonoBehaviour
         int count = 0;
         var allObjects = FindObjectsOfType<GameObject>();
         
-        // DEMO: Loop through all objects in the scene
+        // Loop through all objects in the scene
         foreach (var obj in allObjects)
         {
-            // DEMO: Skip objects that are already set up or not suitable
+            // Skip objects that are already set up or not suitable
             if (obj.GetComponent<GazeInteractable>() != null || 
                 obj.GetComponent<HoverLabel>() != null ||
                 obj.name.ToLower().Contains("camera") ||
@@ -50,14 +50,14 @@ public class SimpleInteractiveSetup : MonoBehaviour
                 obj.name.ToLower().Contains("ground"))
                 continue;
                 
-            // DEMO: Only make objects with renderers interactive (visible objects)
+            // Only make objects with renderers interactive (visible objects)
             if (obj.GetComponent<Renderer>() != null || obj.GetComponentInChildren<Renderer>() != null)
             {
-                // DEMO: Add GazeInteractable component for highlighting and animations
+                // Add GazeInteractable component for highlighting and animations
                 var gazeComp = obj.AddComponent<GazeInteractable>();
                 gazeComp.highlightColor = highlightColor;
                 
-                // DEMO: Add HoverLabel component for better display names
+                // Add HoverLabel component for better display names
                 var labelComp = obj.AddComponent<HoverLabel>();
                 labelComp.label = CleanObjectName(obj.name);
                 labelComp.category = GetCategory(obj.name);
