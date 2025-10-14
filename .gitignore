@@ -10,7 +10,7 @@ Thumbs.db
 venv/
 .env
 .env.* 
-*.env
+# *.env  # Commented out to allow config.env template
 __pycache__/
 *.py[cod]
 *.so
