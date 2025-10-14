@@ -6,6 +6,17 @@ TagManager:
   tags:
   - Tree
   - Bush
+  - Fire
+  - Forrest
+  - Hospital
+  - Tall building
+  - School
+  - Woman
+  - Child
+  - Man
+  - Police Officer
+  - White house
+  - Yellow House
   layers:
   - Default
   - TransparentFX
