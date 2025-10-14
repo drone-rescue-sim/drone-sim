@@ -12,9 +12,12 @@
 {"prompt": "fly to the right", "completion": "move_right"}
 {"prompt": "ascend", "completion": "ascend"}
 {"prompt": "go up", "completion": "ascend"}
+{"prompt": "climb", "completion": "ascend"}
+{"prompt": "up", "completion": "ascend"}
 {"prompt": "rise", "completion": "ascend"}
 {"prompt": "descend", "completion": "descend"}
 {"prompt": "go down", "completion": "descend"}
+{"prompt": "down", "completion": "descend"}
 {"prompt": "drop down", "completion": "descend"}
 {"prompt": "turn left", "completion": "turn_left"}
 {"prompt": "rotate left", "completion": "turn_left"}

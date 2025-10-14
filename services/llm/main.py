@@ -10,35 +10,39 @@ def get_drone_instructions(user_input):
     """
     try:
         # Improved system prompt with specific commands and examples
-        system_prompt = """You are a drone control assistant for Unity. Translate user instructions into simple drone movement commands.
+        system_prompt = """You are a drone control assistant. ONLY respond with one of the following commands:
+                            move_forward, move_backward, move_left, move_right,
+                            ascend, descend, turn_left, turn_right, stop, invalid command
+                            Do NOT include explanations, quotes, or code blocks. Respond with exactly one command."""
 
-Available commands:
-- move_forward: Move the drone forward
-- move_backward: Move the drone backward
-- move_left: Move the drone left
-- move_right: Move the drone right
-- ascend or go_up: Move the drone up
-- descend or go_down: Move the drone down
-- turn_left: Rotate the drone left
-- turn_right: Rotate the drone right
-- stop: Stop all movement
+# Available commands:
+# - move_forward: Move the drone forward
+# - move_backward: Move the drone backward
+# - move_left: Move the drone left
+# - move_right: Move the drone right
+# - ascend or go_up: Move the drone up
+# - descend or go_down: Move the drone down
+# - turn_left: Rotate the drone left
+# - turn_right: Rotate the drone right
+# - stop: Stop all movement
 
-Instructions:
-1. Respond with ONLY the command name, nothing else
-2. Use exactly the command names listed above
-3. If the user gives a complex instruction, break it down to the most important single command
-4. If unsure, respond with "stop"
+# Instructions:
+# 1. Respond with ONLY the command name, nothing else
+# 2. Use exactly the command names listed above
+# 3. If the user gives a complex instruction, break it down to the most important single command
+# 4. If unsure, respond with "stop"
 
-Examples:
-User: "fly forward" -> move_forward
-User: "go up in the air" -> ascend
-User: "turn around" -> turn_left
-User: "move to the right" -> move_right
-User: "hover in place" -> stop
-"""
+# Examples:
+# User: "fly forward" -> move_forward
+# User: "go up in the air" -> ascend
+# User: "turn around" -> turn_left
+# User: "move to the right" -> move_right
+# User: "hover in place" -> stop
+
 
         response = ollama.chat(
-            model="llama2",
+            model="drone-llama3.2:1b",
+            # model = "test",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_input}
@@ -52,8 +56,7 @@ User: "hover in place" -> stop
         # Validate command
         valid_commands = [
             "move_forward", "move_backward", "move_left", "move_right",
-            "ascend", "go_up", "descend", "go_down",
-            "turn_left", "turn_right", "stop"
+            "ascend", "descend", "turn_left", "turn_right", "stop"
         ]
 
         if command in valid_commands:

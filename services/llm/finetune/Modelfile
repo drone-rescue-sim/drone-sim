@@ -22,5 +22,4 @@ Instructions:
 """
 
 # TRAIN ./drone_commands.jsonl
-
 PARAMETER temperature 0
