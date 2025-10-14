@@ -7,6 +7,10 @@ public class EyeTrackingSimulator : MonoBehaviour
 
     void Update()
     {
+        // DISABLED: Using GazeRayInteractor instead for advanced gaze tracking
+        // This simple system is kept for reference but disabled to avoid conflicts
+        
+        /*
         Vector3 mousePos = Input.mousePosition;
 
         // Tobii: 
@@ -26,6 +30,17 @@ public class EyeTrackingSimulator : MonoBehaviour
             // Clean console logging
             Debug.Log($"👁️ Looking at: {hit.collider.name} | Distance: {hit.distance:F1}m | Position: {hit.point}");
 
+        }
+        */
+        
+        // Still update the visual marker position for visual feedback
+        Vector3 mousePos = Input.mousePosition;
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+        
+        if (Physics.Raycast(ray, out hit))
+        {
+            gazeMarker.transform.position = hit.point;
         }
     }
 }

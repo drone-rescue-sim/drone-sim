@@ -12,7 +12,7 @@ public class GazeRayInteractor : MonoBehaviour
 
     [Header("Dwell Click (seconds)")]
     [Tooltip("0 = disabled. Hold gaze to trigger click.")]
-    public float dwellTime = 0.6f;
+    public float dwellTime = 20f; // Very long dwell time - effectively disabled
     public float dwellMoveTolerance = 6f; // pixels
 
     [Header("Hover Logging")]
@@ -165,7 +165,17 @@ public class GazeRayInteractor : MonoBehaviour
 
             // Manual "click" (Space)
             if (Input.GetKeyDown(KeyCode.Space))
-                _currentTarget.SendMessage("OnGazeClick", SendMessageOptions.DontRequireReceiver);
+            {
+                Debug.Log($"🔍 Spacebar pressed! Current target: {(_currentTarget != null ? _currentTarget.name : "null")}");
+                if (_currentTarget != null)
+                {
+                    _currentTarget.SendMessage("OnGazeClick", SendMessageOptions.DontRequireReceiver);
+                }
+                else
+                {
+                    Debug.Log("⚠️ No current target to click!");
+                }
+            }
 
             // Dwell click (optional)
             if (dwellTime > 0f)
