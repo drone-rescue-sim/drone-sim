@@ -468,12 +468,17 @@ def health():
     except:
         ollama_available = False
 
-    # Test LLM connection
+    # Lightweight readiness: avoid calling the LLM here to prevent noisy logs and latency
+    # Detailed testing is provided by /test_llm
     llm_working = False
     try:
-        test_commands = get_drone_instructions("test")
-        llm_working = test_commands and test_commands != ["stop"]
-    except:
+        from main import LLM_PROVIDER, OPENAI_API_KEY
+        if LLM_PROVIDER.lower() == "openai":
+            llm_working = bool(OPENAI_API_KEY)
+        else:
+            # For Ollama, consider it working if the module is importable
+            llm_working = ollama_available
+    except Exception:
         llm_working = False
 
     return jsonify({

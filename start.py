@@ -70,6 +70,39 @@ class DroneServices:
 
         return True
 
+    def free_port(self, port: int) -> None:
+        """Force free a local TCP port if occupied (best effort)."""
+        self.print_status(f"Ensuring port {port} is free...")
+        # 1) Try macOS/Unix lsof
+        try:
+            result = subprocess.run(
+                ["lsof", f"-tiTCP:{port}", "-sTCP:LISTEN"],
+                capture_output=True,
+                text=True,
+            )
+            pids = [p.strip() for p in result.stdout.splitlines() if p.strip()]
+            for pid in pids:
+                try:
+                    os.kill(int(pid), signal.SIGTERM)
+                    time.sleep(0.3)
+                    # If still alive, SIGKILL
+                    try:
+                        os.kill(int(pid), 0)
+                        os.kill(int(pid), signal.SIGKILL)
+                    except OSError:
+                        pass
+                except Exception:
+                    pass
+            if pids:
+                self.print_status(f" Killed processes on port {port}: {', '.join(pids)}")
+        except FileNotFoundError:
+            # 2) Try Linux fuser (if available)
+            try:
+                subprocess.run(["fuser", "-k", f"{port}/tcp"], capture_output=True, text=True)
+                self.print_status(f" Freed port {port} via fuser")
+            except Exception:
+                pass
+
     def start_ollama(self):
         """Start Ollama service"""
         self.print_status("Starting Ollama service...")
@@ -139,6 +172,9 @@ class DroneServices:
     def start_llm_service(self):
         """Start the LLM HTTP service"""
         self.print_status("Starting LLM HTTP Service...")
+
+        # Proactively free the LLM port to avoid address-in-use errors
+        self.free_port(5006)
 
         # Start LLM service
         try:

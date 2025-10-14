@@ -764,18 +764,19 @@ public class DroneController : MonoBehaviour
             
             if (foundObject != null)
             {
-                // Create response with object data
-                var responseData = new
+                // Create response with object data using serializable DTOs
+                var dto = new GazeHistoryByNameResponse
                 {
                     found = true,
                     name = foundObject.name,
                     tag = foundObject.tag,
-                    position = new { x = foundObject.position.x, y = foundObject.position.y, z = foundObject.position.z },
+                    position = new Vector3Dto { x = foundObject.position.x, y = foundObject.position.y, z = foundObject.position.z },
+                    rotation = new QuaternionDto { x = foundObject.rotation.x, y = foundObject.rotation.y, z = foundObject.rotation.z, w = foundObject.rotation.w },
                     timestamp = foundObject.timestamp,
                     distance = foundObject.distance
                 };
-                
-                string responseJson = JsonUtility.ToJson(responseData);
+
+                string responseJson = JsonUtility.ToJson(dto);
                 SendJsonResponse(response, responseJson);
                 Debug.Log($"Returning gaze history for object '{objectName}': {foundObject.name} at {foundObject.position}");
             }
@@ -819,30 +820,35 @@ public class DroneController : MonoBehaviour
             
             if (recentObjects != null && recentObjects.Count > 0)
             {
-                // Create response with object data
-                var responseData = new
+                // Create response with object data using serializable DTOs (JsonUtility cannot serialize anonymous types)
+                var dto = new GazeHistoryRecentResponse
                 {
                     found = true,
                     count = recentObjects.Count,
-                    objects = recentObjects.Select(obj => new
+                    objects = recentObjects.Select(obj => new GazeObjectDto
                     {
                         name = obj.name,
                         tag = obj.tag,
-                        position = new { x = obj.position.x, y = obj.position.y, z = obj.position.z },
-                        rotation = new { x = obj.rotation.x, y = obj.rotation.y, z = obj.rotation.z, w = obj.rotation.w },
+                        position = new Vector3Dto { x = obj.position.x, y = obj.position.y, z = obj.position.z },
+                        rotation = new QuaternionDto { x = obj.rotation.x, y = obj.rotation.y, z = obj.rotation.z, w = obj.rotation.w },
                         timestamp = obj.timestamp,
                         distance = obj.distance
                     }).ToArray()
                 };
-                
-                string responseJson = JsonUtility.ToJson(responseData);
+
+                string responseJson = JsonUtility.ToJson(dto);
                 SendJsonResponse(response, responseJson);
                 Debug.Log($"Returning {recentObjects.Count} recent objects from gaze history");
             }
             else
             {
-                var responseData = new { found = false, count = 0, objects = new object[0] };
-                string responseJson = JsonUtility.ToJson(responseData);
+                var dto = new GazeHistoryRecentResponse
+                {
+                    found = false,
+                    count = 0,
+                    objects = new GazeObjectDto[0]
+                };
+                string responseJson = JsonUtility.ToJson(dto);
                 SendJsonResponse(response, responseJson);
                 Debug.Log("No objects found in gaze history");
             }
@@ -874,5 +880,54 @@ public class DroneController : MonoBehaviour
     {
         public string command;  // For backward compatibility
         public string[] commands;  // For multiple commands
+    }
+
+    // Serializable DTOs for gaze history recent response
+    [System.Serializable]
+    private class Vector3Dto
+    {
+        public float x;
+        public float y;
+        public float z;
+    }
+
+    [System.Serializable]
+    private class QuaternionDto
+    {
+        public float x;
+        public float y;
+        public float z;
+        public float w;
+    }
+
+    [System.Serializable]
+    private class GazeObjectDto
+    {
+        public string name;
+        public string tag;
+        public Vector3Dto position;
+        public QuaternionDto rotation;
+        public float timestamp;
+        public float distance;
+    }
+
+    [System.Serializable]
+    private class GazeHistoryRecentResponse
+    {
+        public bool found;
+        public int count;
+        public GazeObjectDto[] objects;
+    }
+
+    [System.Serializable]
+    private class GazeHistoryByNameResponse
+    {
+        public bool found;
+        public string name;
+        public string tag;
+        public Vector3Dto position;
+        public QuaternionDto rotation;
+        public float timestamp;
+        public float distance;
     }
 }
