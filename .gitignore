@@ -26,6 +26,10 @@ build/
 .eggs/
 *.egg-info/
 pip-wheel-metadata/
+services/detection/runs/
+services/detection/roboflow/test/
+services/detection/roboflow/train/
+services/detection/roboflow/valid/
 
 # -------------------------
 # Unity (generic)
@@ -43,6 +47,7 @@ pip-wheel-metadata/
 [Cc]rashReports/
 [Aa]ssets/AssetStoreTools*
 *.unityPackage
+TrainingData/
 
 # Unity IDE/generated
 *.pidb
