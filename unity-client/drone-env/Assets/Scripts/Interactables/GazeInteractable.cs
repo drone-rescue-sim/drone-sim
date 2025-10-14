@@ -1,5 +1,21 @@
 using UnityEngine;
 
+/// <summary>
+/// Interactive Object Component
+/// 
+/// This component makes objects respond to gaze tracking:
+/// - Highlights when looked at (yellow glow)
+/// - Reacts when clicked (scale, flash, wiggle animations)
+/// - Provides visual feedback for user interactions
+/// 
+/// HOW IT WORKS:
+/// 1. GazeRayInteractor sends messages to this component
+/// 2. OnGazeEnter() → Object highlights yellow
+/// 3. OnGazeExit() → Object returns to normal color
+/// 4. OnGazeClick() → Object animates (scale, flash, wiggle)
+/// 
+/// This creates the interactive experience where objects "respond" to being looked at.
+/// </summary>
 public class GazeInteractable : MonoBehaviour
 {
     [Header("Highlight Settings")]
@@ -19,17 +35,21 @@ public class GazeInteractable : MonoBehaviour
         }
     }
 
-    // Called by the GazeRayInteractor
+    // DEMO: Called when user starts looking at this object
     void OnGazeEnter()
     {
+        // Highlight the object in yellow to show it's being looked at
         if (_hasColorProperty) targetRenderer.material.color = highlightColor;
     }
 
+    // DEMO: Called when user stops looking at this object
     void OnGazeExit()
     {
+        // Return object to its original color
         if (_hasColorProperty) targetRenderer.material.color = _originalColor;
     }
 
+    // DEMO: Called when user "clicks" on this object (presses Spacebar while looking at it)
     void OnGazeClick()
     {
         var hoverLabel = GetComponent<HoverLabel>();
@@ -37,11 +57,9 @@ public class GazeInteractable : MonoBehaviour
         
         Debug.Log($"🎯 Clicked: {displayName}");
         
-        // Add visual feedback (scale animation)
-        StartCoroutine(ClickAnimation());
-        
-        // Add some fun interaction effects
-        AddClickEffects();
+        // DEMO: Start visual feedback animations
+        StartCoroutine(ClickAnimation());  // Scale up/down animation
+        AddClickEffects();                 // Color flash + rotation wiggle
     }
     
     private void AddClickEffects()

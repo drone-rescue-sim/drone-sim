@@ -1,7 +1,21 @@
 using UnityEngine;
 
 /// <summary>
-/// Simple script to make objects interactive with gaze tracking
+/// Automatic Object Setup Script
+/// 
+/// This script automatically finds objects in the scene and makes them interactive:
+/// - Adds GazeInteractable component (for highlighting and animations)
+/// - Adds HoverLabel component (for better display names)
+/// - Categorizes objects (Building, Vehicle, Nature, etc.)
+/// 
+/// HOW IT WORKS:
+/// 1. Scans all GameObjects in the scene
+/// 2. Finds objects with Renderer components (visible objects)
+/// 3. Filters out cameras, lights, ground objects
+/// 4. Adds interactive components to remaining objects
+/// 5. Gives objects clean names and categories
+/// 
+/// This saves manual work and makes the entire scene interactive automatically.
 /// </summary>
 public class SimpleInteractiveSetup : MonoBehaviour
 {
@@ -25,9 +39,10 @@ public class SimpleInteractiveSetup : MonoBehaviour
         int count = 0;
         var allObjects = FindObjectsOfType<GameObject>();
         
+        // DEMO: Loop through all objects in the scene
         foreach (var obj in allObjects)
         {
-            // Skip if already has components or is not a good candidate
+            // DEMO: Skip objects that are already set up or not suitable
             if (obj.GetComponent<GazeInteractable>() != null || 
                 obj.GetComponent<HoverLabel>() != null ||
                 obj.name.ToLower().Contains("camera") ||
@@ -35,14 +50,14 @@ public class SimpleInteractiveSetup : MonoBehaviour
                 obj.name.ToLower().Contains("ground"))
                 continue;
                 
-            // Only add to objects with renderers
+            // DEMO: Only make objects with renderers interactive (visible objects)
             if (obj.GetComponent<Renderer>() != null || obj.GetComponentInChildren<Renderer>() != null)
             {
-                // Add GazeInteractable
+                // DEMO: Add GazeInteractable component for highlighting and animations
                 var gazeComp = obj.AddComponent<GazeInteractable>();
                 gazeComp.highlightColor = highlightColor;
                 
-                // Add HoverLabel with cleaned name
+                // DEMO: Add HoverLabel component for better display names
                 var labelComp = obj.AddComponent<HoverLabel>();
                 labelComp.label = CleanObjectName(obj.name);
                 labelComp.category = GetCategory(obj.name);

@@ -1,5 +1,19 @@
 using UnityEngine;
 
+/// <summary>
+/// Object Labeling Component
+/// 
+/// This component provides clean, readable names for objects in the gaze tracking system.
+/// Instead of showing "Building_01_Office_Tower", it shows "Building: Office Tower".
+/// 
+/// HOW IT WORKS:
+/// - Stores a custom label for the object
+/// - Stores a category (Building, Vehicle, Nature, etc.)
+/// - Combines them for display: "Category: Label"
+/// - Falls back to object name if no custom label is set
+/// 
+/// This makes the console output much more readable and professional.
+/// </summary>
 public class HoverLabel : MonoBehaviour
 {
     [Header("Label Settings")]
