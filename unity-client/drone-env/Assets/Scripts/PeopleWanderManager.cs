@@ -19,10 +19,10 @@ public class PeopleWanderManager : MonoBehaviour
     public float groundY = -0.5f;
 
     [Tooltip("Min movement speed (m/s)")]
-    public float minSpeed = 0.7f;
+    public float minSpeed = 0.2f;
 
     [Tooltip("Max movement speed (m/s)")]
-    public float maxSpeed = 1.4f;
+    public float maxSpeed = 0.6f;
 
     [Tooltip("Seconds before force retarget")] 
     public float maxTargetTime = 8f;

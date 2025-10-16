@@ -25110,7 +25110,7 @@ MonoBehaviour:
   - {fileID: 100100000, guid: 253e359b55511ec498fe3b5e2243e813, type: 3}
   count: 0
   areaCenter: {x: -2.4, y: -0.55, z: -27.1}
-  areaSize: {x: 20, y: 0, z: 20}
+  areaSize: {x: 60, y: 0, z: 60}
   useFixedY: 1
   fixedY: -0.55
   randomYRotation: 1
@@ -25166,10 +25166,10 @@ MonoBehaviour:
   - little_boy_
   - police_
   areaCenter: {x: -2.4, y: -0.55, z: -27.1}
-  areaSize: {x: 20, y: 0, z: 20}
+  areaSize: {x: 60, y: 0, z: 60}
   groundY: -0.55
-  minSpeed: 0.7
-  maxSpeed: 1.4
+  minSpeed: 0.2
+  maxSpeed: 0.6
   maxTargetTime: 8
   faceMovement: 1
 --- !u!1001 &995376236

@@ -51,14 +51,31 @@ namespace CityPeople
             if (animator != null)
             {
                 myClips = animator.runtimeAnimatorController.animationClips;
-                if (AutoPlayAnimations)
+                if (myClips != null && myClips.Length > 0)
+                {
+                    var walking = new List<AnimationClip>();
+                    foreach (var clip in myClips)
+                    {
+                        if (clip == null) continue;
+                        var name = clip.name.ToLowerInvariant();
+                        if (name.Contains("walk") || name.Contains("locom"))
+                        {
+                            walking.Add(clip);
+                        }
+                    }
+                    if (walking.Count > 0)
+                    {
+                        myClips = walking.ToArray();
+                    }
+                }
+                if (AutoPlayAnimations && myClips != null && myClips.Length > 0)
                 {
                     PlayAnyClip();
                     StartCoroutine(ShuffleClips());
                 }
             }
 
-            if (AutoPlayAnimations)
+            if (AutoPlayAnimations && myClips != null && myClips.Length > 0)
             {
                 //collider for detect clicks near the character
                 CapsuleCollider collider =  gameObject.AddComponent<CapsuleCollider>();
@@ -91,13 +108,17 @@ namespace CityPeople
 
         public void PlayAnyClip()
         {
+            if (animator == null || myClips == null || myClips.Length == 0)
+            {
+                return;
+            }
             var cl = myClips[Random.Range(0, myClips.Length)];
             animator.CrossFadeInFixedTime(cl.name, 1.0f, -1, Random.value * cl.length);
         }
 
         IEnumerator ShuffleClips()
         {
-            while (true)
+            while (myClips != null && myClips.Length > 0)
             {
                 yield return new WaitForSeconds(15.0f + Random.value * 5.0f);
                 PlayAnyClip();
