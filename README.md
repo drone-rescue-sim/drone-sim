@@ -116,6 +116,36 @@ drone-sim/
 └── test.py              # Test suite
 ```
 
+## Key Files to Review and to Look at
+
+### Core Unity Scripts (C#)
+
+- `unity-client/drone-env/Assets/Scripts/DroneController.cs` - Main drone movement and HTTP server (934 lines)
+- `unity-client/drone-env/Assets/Scripts/CommandInputUI.cs` - Voice/text input interface
+- `unity-client/drone-env/Assets/Scripts/CommandUIManager.cs` - UI management
+- `unity-client/drone-env/Assets/Scripts/GazeHistoryManager.cs` - Gaze tracking data management
+- `unity-client/drone-env/Assets/Scripts/EyeTrackingSimulator.cs` - Mouse-based gaze simulation
+
+### Python Backend Services
+
+- `services/llm/http_service.py` - Main Flask server for voice/text processing (533 lines)
+- `services/llm/main.py` - LLM command processing logic (311 lines)
+- `services/detection/main.py` - YOLO object detection (71 lines)
+- `services/tobii/http_service.py` - Tobii gaze tracking API (132 lines)
+- `start.py` - Service startup script (405 lines)
+
+### Configuration & Data
+
+- `config.env` - API keys and environment variables
+- `requirements.txt` - Python dependencies
+- `services/llm/finetune/drone_commands.jsonl` - Training data (491 examples)
+- `services/detection/yolo-Weights/yolov8n.pt` - YOLO model weights
+
+### Unity Project Files
+
+- `unity-client/drone-env/Assets/Scenes/SampleScene.unity` - Main scene
+- `unity-client/drone-env/Assets/Prefabs/drone Black.prefab` - Drone model
+
 ## License
 
 Educational and research purposes.
