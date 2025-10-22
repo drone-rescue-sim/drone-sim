@@ -23,7 +23,6 @@
 # Recordings can get excessive in size
 /[Rr]ecordings/
 
-
 # Uncomment this line if you wish to ignore the asset store tools plugin
 # /[Aa]ssets/AssetStoreTools*
 
@@ -113,4 +112,4 @@ __pycache__/
 *.engine
 *.weights
 runs/               # YOLO training outputs
-datasets/           # large datasets (optional, if you don’t want them in repo)
+datasets/           # large datasets (optional, if you don't want them in repo)

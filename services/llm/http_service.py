@@ -7,7 +7,8 @@ import json
 import sys
 import math
 from dotenv import load_dotenv
-from main import get_drone_instructions, send_to_unity
+from main import get_drone_instructions as core_get_drone_instructions, send_to_unity as core_send_to_unity
+import re
 
 # Load environment variables from config.env
 load_dotenv('config.env')
@@ -273,10 +274,217 @@ def process_navigation_command(commands):
     
     return processed_commands, errors
 
+def infer_navigation_from_text(user_input: str) -> list | None:
+    """Best-effort heuristic to infer navigation commands from raw text.
+    - "go to \"Object Name\"" -> ["navigate_to_object", "Object Name"]
+    - "go to latest tree" / "go to last tree" -> ["navigate_to_previous", "Tree"]
+    - "go to tree" -> ["navigate_to_previous", "Tree"]
+    """
+    if not user_input:
+        return None
+    text = user_input.strip()
+
+    # Quoted object name
+    m = re.search(r'"([^"]+)"', text)
+    if m:
+        name = m.group(1).strip()
+        if name:
+            return ["navigate_to_object", name]
+
+    lower = text.lower()
+    # Simple type mapping
+    synonyms_to_tag = {
+        'tree': 'Tree',
+        'person': 'Person',
+        'human': 'Person',
+        'woman': 'Person',
+        'man': 'Person',
+        'male': 'Person',
+        'female': 'Person',
+    }
+
+    # latest/last/previous <type>
+    for keyword in ["latest", "last", "previous"]:
+        if f" {keyword} " in f" {lower} ":
+            for syn, tag in synonyms_to_tag.items():
+                if f" {syn} " in f" {lower} ":
+                    return ["navigate_to_previous", tag]
+
+    # generic "go to <type>"
+    if "go to" in lower or "navigate to" in lower:
+        for syn, tag in synonyms_to_tag.items():
+            if f" {syn} " in f" {lower} ":
+                return ["navigate_to_previous", tag]
+
+    return None
+
+import ollama
+import requests  # for HTTP requests
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import threading
+import time
+import logging
+
+# Unity HTTP endpoint
+UNITY_URL = "http://127.0.0.1:5005/"
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
+
+# Rename legacy helpers to avoid shadowing imported functions from main.py
+# (kept for reference but not used)
+
+def legacy_get_drone_instructions(user_input):
+    """
+    Legacy single-command helper (unused). Kept to avoid import shadowing.
+    """
+    try:
+        system_prompt = """You are a drone control assistant for Unity. Translate user instructions into simple drone movement commands.
+
+Available commands:
+- move_forward: Move the drone forward
+- move_backward: Move the drone backward
+- move_left: Move the drone left
+- move_right: Move the drone right
+- ascend or go_up: Move the drone up
+- descend or go_down: Move the drone down
+- turn_left: Rotate the drone left
+- turn_right: Rotate the drone right
+- stop: Stop all movement
+"""
+        response = ollama.chat(
+            model="llama2",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_input}
+            ]
+        )
+        instructions = response['message']['content']
+        command = instructions.strip().lower()
+        valid_commands = [
+            "move_forward", "move_backward", "move_left", "move_right",
+            "ascend", "go_up", "descend", "go_down",
+            "turn_left", "turn_right", "stop"
+        ]
+        return command if command in valid_commands else "stop"
+    except Exception:
+        return "stop"
+
+
+def legacy_send_to_unity(command):
+    """
+    Legacy single-command sender (unused). Kept to avoid import shadowing.
+    """
+    try:
+        payload = {"command": command}
+        headers = {"Content-Type": "application/json"}
+        r = requests.post(UNITY_URL, json=payload, headers=headers, timeout=5.0)
+        return (r.status_code == 200, None)
+    except Exception as e:
+        return (False, str(e))
+
+def get_drone_instructions(user_input):
+    """
+    Process user input using an LLM to generate drone instructions.
+    """
+    try:
+        # Improved system prompt with specific commands and examples
+        system_prompt = """You are a drone control assistant for Unity. Translate user instructions into simple drone movement commands.
+
+Available commands:
+- move_forward: Move the drone forward
+- move_backward: Move the drone backward
+- move_left: Move the drone left
+- move_right: Move the drone right
+- ascend or go_up: Move the drone up
+- descend or go_down: Move the drone down
+- turn_left: Rotate the drone left
+- turn_right: Rotate the drone right
+- stop: Stop all movement
+
+Instructions:
+1. Respond with ONLY the command name, nothing else
+2. Use exactly the command names listed above
+3. If the user gives a complex instruction, break it down to the most important single command
+4. If unsure, respond with "stop"
+
+Examples:
+User: "fly forward" -> move_forward
+User: "go up in the air" -> ascend
+User: "turn around" -> turn_left
+User: "move to the right" -> move_right
+User: "hover in place" -> stop
+"""
+
+        response = ollama.chat(
+            model="llama2",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_input}
+            ]
+        )
+        instructions = response['message']['content']
+
+        # Clean and validate the response
+        command = instructions.strip().lower()
+
+        # Validate command
+        valid_commands = [
+            "move_forward", "move_backward", "move_left", "move_right",
+            "ascend", "go_up", "descend", "go_down",
+            "turn_left", "turn_right", "stop"
+        ]
+
+        if command in valid_commands:
+            return command
+        else:
+            logger.warning(f"Invalid command generated: {command}, using 'stop' instead")
+            return "stop"
+
+    except Exception as e:
+        logger.error(f"Error generating instructions: {e}")
+        return "stop"
+
+def send_to_unity(command):
+    """
+    Send the processed instructions to Unity via HTTP POST.
+    """
+    try:
+        payload = {"command": command}
+        headers = {"Content-Type": "application/json"}
+
+        r = requests.post(UNITY_URL, json=payload, headers=headers, timeout=5.0)
+
+        if r.status_code == 200:
+            logger.info(f"✓ Sent command to Unity: {command}")
+            return True, None
+        else:
+            error_msg = f"✗ Unity responded with status code {r.status_code}: {r.text}"
+            logger.error(error_msg)
+            return False, error_msg
+    except requests.exceptions.ConnectionError:
+        error_msg = "✗ Cannot connect to Unity. Make sure Unity is running and the HTTP server is started."
+        logger.error(error_msg)
+        return False, error_msg
+    except requests.exceptions.Timeout:
+        error_msg = "✗ Request to Unity timed out."
+        logger.error(error_msg)
+        return False, error_msg
+    except Exception as e:
+        error_msg = f"✗ Error sending to Unity: {e}"
+        logger.error(error_msg)
+        return False, error_msg
+
 @app.route('/process_command', methods=['POST'])
 def process_command():
     """
     Process text commands from Unity
+    HTTP endpoint to process commands from Unity UI.
     """
     try:
         data = request.get_json()
@@ -300,7 +508,20 @@ def process_command():
             )
         
         # Process input with LLM (including gaze history context)
-        commands = get_drone_instructions(user_input, gaze_history)
+        try:
+            commands = core_get_drone_instructions(user_input, gaze_history)
+        except TypeError:
+            commands = core_get_drone_instructions(user_input)
+
+        # Heuristic fallback: infer navigation from text when LLM returns no nav
+        if not (isinstance(commands, list) and any(c in ["navigate_to_previous", "navigate_to_object"] for c in commands)):
+            inferred = infer_navigation_from_text(user_input)
+            if inferred:
+                commands = inferred
+
+        # Ensure list type for downstream and response
+        if isinstance(commands, str):
+            commands = [commands]
 
         if commands:
             print(f"📤 Processing commands: {commands}")
@@ -314,7 +535,7 @@ def process_command():
                 commands = processed_commands
             
             # Send instructions to Unity
-            success = send_to_unity(commands)
+            success = core_send_to_unity(commands)
             if success:
                 return jsonify({'status': 'success', 'commands': commands}), 200
             else:
@@ -389,7 +610,20 @@ def process_audio_command():
                     gaze_history = get_recent_gaze_history(30)
                     
                     # Process the transcribed text as a drone command (including gaze history context)
-                    commands = get_drone_instructions(transcript, gaze_history)
+                    try:
+                        commands = core_get_drone_instructions(transcript, gaze_history)
+                    except TypeError:
+                        commands = core_get_drone_instructions(transcript)
+
+                    # Heuristic fallback if needed
+                    if not (isinstance(commands, list) and any(c in ["navigate_to_previous", "navigate_to_object"] for c in commands)):
+                        inferred = infer_navigation_from_text(transcript)
+                        if inferred:
+                            commands = inferred
+
+                    # Ensure list type for downstream and response
+                    if isinstance(commands, str):
+                        commands = [commands]
 
                     if commands:
                         print(f"📤 Processing commands: {commands}")
@@ -408,7 +642,7 @@ def process_audio_command():
                                 }), 404
                             commands = processed_commands
                         
-                        success = send_to_unity(commands)
+                        success = core_send_to_unity(commands)
 
                         return jsonify({
                             'transcript': transcript,
@@ -495,7 +729,7 @@ def test_llm():
     Test LLM endpoint
     """
     try:
-        test_commands = get_drone_instructions("move forward")
+        test_commands = core_get_drone_instructions("move forward")
         return jsonify({
             'status': 'success',
             'test_input': 'move forward',

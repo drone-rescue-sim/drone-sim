@@ -13,6 +13,21 @@ using System.Linq;
 /// Manual input: Arrow keys (↑↓←→) for movement, Q/E for rotation.
 /// LLM commands support: move_forward/backward/left/right, ascend/descend, turn_left/right.
 /// Runs an HTTP server on port 5005 to receive commands from the LLM service.
+
+/// <summary>
+/// Controls drone movement and handles natural language commands from LLM service.
+/// Manual input: 
+/// - Arrow keys (↑↓←→) for movement
+/// - Q key for turning left, E key for turning right
+/// - Space for ascending, Shift for descending
+/// LLM commands support: 
+/// - Basic movement: move_forward/backward/left/right, ascend/descend, turn_left/right
+/// - Precise turning: turn_180, turn_90_left, turn_45_right, turn_360
+/// - Speed control: speed_50, speed_100, speed_25 (10-200% range)
+/// - Hover mode: hover, no_hover
+/// - Emergency stop: stop
+/// Runs an HTTP server on port 5005 to receive commands from the LLM service.
+/// Features hover mode for precise turning and configurable speed multipliers.
 /// </summary>
 [RequireComponent(typeof(Rigidbody))]
 public class DroneController : MonoBehaviour
@@ -22,6 +37,23 @@ public class DroneController : MonoBehaviour
     public float ascendSpeed = 6f;
     public float yawSpeed = 120f;
     public float accel = 8f;
+    
+    [Header("Advanced Controls")]
+    [Tooltip("Speed multiplier for LLM commands (0.1 = 10% speed, 1.0 = 100% speed)")]
+    public float llmSpeedMultiplier = 1.0f;
+    
+    [Tooltip("Enable hover mode - drone maintains position while turning")]
+    public bool hoverMode = true;
+
+    [Header("Collision Detection")]
+    [Tooltip("Enable collision detection to prevent going through buildings")]
+    public bool enableCollisionDetection = true;
+    
+    [Tooltip("Distance to check for collisions ahead of drone")]
+    public float collisionCheckDistance = 2.0f;
+    
+    [Tooltip("Layers to check for collisions (buildings, obstacles)")]
+    public LayerMask collisionLayers = -1;
 
     [Header("Optional visuals")]
     public Transform visual;
@@ -37,6 +69,14 @@ public class DroneController : MonoBehaviour
     // private InputAction ascendNeg;      // DISABLED - LeftShift = -1
     private InputAction yawLeft;        // Q key for left rotation
     private InputAction yawRight;       // E key for right rotation
+    private InputAction turnLeftAction;  // Cmd+Left Arrow for turning left
+    private InputAction turnRightAction; // Cmd+Right Arrow for turning right
+    private InputAction ascendPos;      // Cmd+Up Arrow for ascending
+    private InputAction ascendNeg;      // Cmd+Down Arrow for descending
+    // private InputAction ascendPos;      // DISABLED - Space = +1
+    // private InputAction ascendNeg;      // DISABLED - LeftShift = -1
+    // private InputAction yawLeft;        // DISABLED - Q
+    // private InputAction yawRight;       // DISABLED - E
 
     // LLM Command handling
     private HttpListener listener;
@@ -65,6 +105,11 @@ public class DroneController : MonoBehaviour
     private Quaternion rotationTarget;
     private float navigationTolerance = 1f; // How close to get to target
     private float lookAtTolerance = 5f; // How close to get to look-at target
+    // Precise turning system
+    private bool isTurningToAngle = false;
+    private float targetYawAngle = 0f;
+    private float turnSpeed = 90f; // degrees per second for precise turns
+    private float turnTolerance = 2f; // degrees tolerance for reaching target
 
     void OnEnable()
     {
@@ -86,6 +131,17 @@ public class DroneController : MonoBehaviour
         yawRight = new InputAction("YawRight", binding: "<Keyboard>/e");
         yawLeft.Enable();
         yawRight.Enable();
+        // Turn controls with Q and E keys (classic game controls)
+        turnLeftAction = new InputAction("TurnLeft", binding: "<Keyboard>/q");
+        turnRightAction = new InputAction("TurnRight", binding: "<Keyboard>/e");
+        turnLeftAction.Enable();
+        turnRightAction.Enable();
+
+        // Ascend/Descend with Space and Shift keys
+        ascendPos = new InputAction("AscendPos", binding: "<Keyboard>/space");
+        ascendNeg = new InputAction("AscendNeg", binding: "<Keyboard>/leftShift");
+        ascendPos.Enable();
+        ascendNeg.Enable();
     }
 
     void OnDisable()
@@ -93,6 +149,10 @@ public class DroneController : MonoBehaviour
         moveAction?.Disable();
         // ascendPos?.Disable(); ascendNeg?.Disable();
         yawLeft?.Disable(); yawRight?.Disable();
+        turnLeftAction?.Disable();
+        turnRightAction?.Disable();
+        ascendPos?.Disable();
+        ascendNeg?.Disable();
     }
 
     void Start()
@@ -141,36 +201,71 @@ public class DroneController : MonoBehaviour
             mv = moveAction.ReadValue<Vector2>();
         }
         
-        // Manual ascend/descend DISABLED - only LLM commands control vertical movement
-        float upDown = 0f; // Space/Shift keys disabled
+        // Manual ascend/descend with Space and Shift (disabled when command UI is visible)
+        float upDown = 0f;
+        if (!CommandInputUI.IsUIVisible)
+        {
+            if (ascendPos.IsPressed()) upDown += 1f;
+            if (ascendNeg.IsPressed()) upDown -= 1f;
+        }
 
-        // Combine manual (arrow keys only) and LLM inputs
-        float totalForward = Mathf.Clamp(mv.y + llmMoveForward, -1f, 1f);
-        float totalRight = Mathf.Clamp(mv.x + llmMoveRight, -1f, 1f);
-        float totalUpDown = Mathf.Clamp(upDown + llmAscend, -1f, 1f);
+        // Apply speed multiplier to LLM commands and combine
+        float manualForward = mv.y;
+        float manualRight = mv.x;
+        float manualUpDown = upDown;
+        
+        float llmForward = llmMoveForward * llmSpeedMultiplier;
+        float llmRight = llmMoveRight * llmSpeedMultiplier;
+        float llmUpDown = llmAscend * llmSpeedMultiplier;
+        
+        float finalForward = Mathf.Clamp(manualForward + llmForward, -1f, 1f);
+        float finalRight = Mathf.Clamp(manualRight + llmRight, -1f, 1f);
+        float finalUpDown = Mathf.Clamp(manualUpDown + llmUpDown, -1f, 1f);
 
-        Vector3 planar   = transform.forward * totalForward * moveSpeed + transform.right * totalRight * moveSpeed;
-        Vector3 vertical = Vector3.up * totalUpDown * ascendSpeed;
+        Vector3 planar   = transform.forward * finalForward * moveSpeed + transform.right * finalRight * moveSpeed;
+        Vector3 vertical = Vector3.up * finalUpDown * ascendSpeed;
+        
+        // Hover mode: stop horizontal movement when turning precisely
+        if (hoverMode && isTurningToAngle)
+        {
+            planar = Vector3.zero;
+        }
+        
+        // Collision detection: prevent movement into buildings
+        if (enableCollisionDetection)
+        {
+            planar = CheckCollisionAndAdjustMovement(planar);
+        }
+        
         velTarget = planar + vertical;
 
         rb.linearVelocity = Vector3.Lerp(rb.linearVelocity, velTarget, Time.fixedDeltaTime * accel);
 
-        // Manual yaw controls - Q and E keys for rotation (disabled when command UI is visible)
+        // Handle rotation - either precise turning or continuous yaw
         float manualYaw = 0f;
         if (!CommandInputUI.IsUIVisible)
         {
             if (yawLeft.IsPressed()) manualYaw -= 1f;
             if (yawRight.IsPressed()) manualYaw += 1f;
         }
-        float totalYaw = Mathf.Clamp(manualYaw + llmYaw, -1f, 1f);
-
-        if (Mathf.Abs(totalYaw) > 0.01f)
-            transform.Rotate(Vector3.up, totalYaw * yawSpeed * Time.fixedDeltaTime, Space.World);
+        
+        if (isTurningToAngle)
+        {
+            // Precise turning to specific angle
+            HandlePreciseTurning();
+        }
+        else
+        {
+            // Continuous yaw from manual and LLM commands
+            float totalYaw = Mathf.Clamp(manualYaw + llmYaw, -1f, 1f);
+            if (Mathf.Abs(totalYaw) > 0.01f)
+                transform.Rotate(Vector3.up, totalYaw * yawSpeed * Time.fixedDeltaTime, Space.World);
+        }
 
         if (visual)
         {
-            float roll  =  totalRight *  tiltAmount;
-            float pitch = -totalForward *  tiltAmount;
+            float roll  =  finalRight *  tiltAmount;
+            float pitch = -finalForward *  tiltAmount;
             Quaternion target = Quaternion.Euler(pitch, 0f, roll);
             visual.localRotation = Quaternion.Slerp(visual.localRotation, target, Time.fixedDeltaTime * tiltLerp);
         }
@@ -296,14 +391,14 @@ public class DroneController : MonoBehaviour
                             }
                         }
                     }
+
+                    // Send response
+                    string responseString = "{\"status\": \"ok\"}";
+                    byte[] buffer = Encoding.UTF8.GetBytes(responseString);
+                    response.ContentLength64 = buffer.Length;
+                    response.OutputStream.Write(buffer, 0, buffer.Length);
                 }
             }
-
-            // Send response
-            string responseString = "{\"status\": \"ok\"}";
-            byte[] buffer = Encoding.UTF8.GetBytes(responseString);
-            response.ContentLength64 = buffer.Length;
-            response.OutputStream.Write(buffer, 0, buffer.Length);
         }
         catch (Exception e)
         {
@@ -319,6 +414,79 @@ public class DroneController : MonoBehaviour
     /// <summary>
     /// Processes a natural language command and converts it to drone movement inputs.
     /// Supports multiple simultaneous commands for complex maneuvers.
+    /// Checks for collisions ahead of the drone and adjusts movement to prevent going through buildings.
+    /// Uses raycasting to detect obstacles in the movement direction.
+    /// </summary>
+    /// <param name="intendedMovement">The intended movement vector</param>
+    /// <returns>Adjusted movement vector that avoids collisions</returns>
+    private Vector3 CheckCollisionAndAdjustMovement(Vector3 intendedMovement)
+    {
+        if (intendedMovement.magnitude < 0.01f)
+            return intendedMovement; // No movement, no collision check needed
+
+        Vector3 movementDirection = intendedMovement.normalized;
+        Vector3 checkPosition = transform.position + Vector3.up * 0.5f; // Check from center of drone
+        
+        // Cast ray in movement direction
+        RaycastHit hit;
+        if (Physics.Raycast(checkPosition, movementDirection, out hit, collisionCheckDistance, collisionLayers))
+        {
+            // Collision detected - reduce movement or stop
+            float distanceToObstacle = hit.distance;
+            float safetyMargin = 0.5f; // Stop 0.5 units before hitting obstacle
+            
+            if (distanceToObstacle <= safetyMargin)
+            {
+                // Too close to obstacle - stop movement in that direction
+                return Vector3.zero;
+            }
+            else
+            {
+                // Reduce movement to stop before hitting obstacle
+                float maxAllowedDistance = distanceToObstacle - safetyMargin;
+                float speedReduction = maxAllowedDistance / collisionCheckDistance;
+                return intendedMovement * speedReduction;
+            }
+        }
+        
+        return intendedMovement; // No collision detected, allow full movement
+    }
+
+    /// <summary>
+    /// Handles precise turning to a specific angle.
+    /// Automatically stops when the target angle is reached.
+    /// </summary>
+    private void HandlePreciseTurning()
+    {
+        float currentYaw = transform.eulerAngles.y;
+        float angleDifference = Mathf.DeltaAngle(currentYaw, targetYawAngle);
+        
+        if (Mathf.Abs(angleDifference) <= turnTolerance)
+        {
+            // Reached target angle
+            isTurningToAngle = false;
+            llmYaw = 0f;
+            Debug.Log($"Reached target angle: {targetYawAngle:F1}°");
+            return;
+        }
+        
+        // Determine turn direction (shortest path)
+        float turnDirection = Mathf.Sign(angleDifference);
+        float turnAmount = turnSpeed * Time.fixedDeltaTime;
+        
+        // Don't overshoot
+        if (Mathf.Abs(angleDifference) < turnAmount)
+        {
+            turnAmount = Mathf.Abs(angleDifference);
+        }
+        
+        transform.Rotate(Vector3.up, turnDirection * turnAmount, Space.World);
+    }
+
+    /// <summary>
+    /// Processes a natural language command and converts it to drone movement inputs.
+    /// Supports multiple simultaneous commands for complex maneuvers.
+    /// Now supports degree-based turning commands like "turn_180" or "turn_90_left".
     /// </summary>
     /// <param name="command">The command string from the LLM service</param>
     private void ProcessCommand(string command)
@@ -327,6 +495,21 @@ public class DroneController : MonoBehaviour
         Debug.Log($"⚡ [DRONE] Processing command: '{lowerCommand}'");
 
         // Parse command - don't reset other commands, allow multiple simultaneous commands
+        Debug.Log($"Processing command: {lowerCommand}");
+
+        // Check for degree-based turning commands first
+        if (TryParseDegreeTurnCommand(lowerCommand))
+        {
+            return; // Command was handled as degree turn
+        }
+        
+        // Check for speed control commands
+        if (TryParseSpeedCommand(lowerCommand))
+        {
+            return; // Command was handled as speed control
+        }
+
+        // Parse standard commands - don't reset other commands, allow multiple simultaneous commands
         switch (lowerCommand)
         {
             case "move_forward":
@@ -371,6 +554,22 @@ public class DroneController : MonoBehaviour
                 SetCommandDuration("turn_right");
                 Debug.Log($"🚁 [DRONE] Executing: turn_right (llmYaw = {llmYaw})");
                 break;
+            case "hover":
+                hoverMode = true;
+                Debug.Log("Hover mode enabled");
+                break;
+            case "no_hover":
+                hoverMode = false;
+                Debug.Log("Hover mode disabled");
+                break;
+            case "collision_on":
+                enableCollisionDetection = true;
+                Debug.Log("Collision detection enabled");
+                break;
+            case "collision_off":
+                enableCollisionDetection = false;
+                Debug.Log("Collision detection disabled");
+                break;
             case "stop":
                 // Reset all movements
                 llmMoveForward = 0f;
@@ -380,6 +579,7 @@ public class DroneController : MonoBehaviour
                 commandDurations.Clear();
                 // Also stop navigation
                 isNavigating = false;
+                isTurningToAngle = false;
                 Debug.Log($"🛑 [DRONE] Executing: stop (all movements reset)");
                 break;
             default:
@@ -405,6 +605,92 @@ public class DroneController : MonoBehaviour
                 }
                 break;
         }
+    }
+
+    /// <summary>
+    /// Attempts to parse degree-based turning commands.
+    /// Supports formats like: "turn_[degrees] or turn_[degrees]_[direction]"
+    /// </summary>
+    /// <param name="command">The command string to parse</param>
+    /// <returns>True if the command was a degree turn command</returns>
+    private bool TryParseDegreeTurnCommand(string command)
+    {
+        // Pattern: turn_[degrees] or turn_[degrees]_[direction]
+        if (!command.StartsWith("turn_"))
+            return false;
+
+        string[] parts = command.Split('_');
+        if (parts.Length < 2)
+            return false;
+
+        // Try to parse the degree value
+        if (float.TryParse(parts[1], out float degrees))
+        {
+            // Determine direction if specified
+            string direction = parts.Length > 2 ? parts[2] : "";
+            
+            float targetAngle = transform.eulerAngles.y;
+            
+            if (direction == "left")
+            {
+                targetAngle -= degrees;
+            }
+            else if (direction == "right")
+            {
+                targetAngle += degrees;
+            }
+            else
+            {
+                // No direction specified, assume shortest path
+                float currentYaw = transform.eulerAngles.y;
+                float angleDifference = Mathf.DeltaAngle(currentYaw, currentYaw + degrees);
+                targetAngle = currentYaw + angleDifference;
+            }
+            
+            // Normalize angle to 0-360 range
+            targetAngle = targetAngle % 360f;
+            if (targetAngle < 0f) targetAngle += 360f;
+            
+            // Start precise turning
+            isTurningToAngle = true;
+            targetYawAngle = targetAngle;
+            llmYaw = 0f; // Stop continuous yaw
+            
+            Debug.Log($"Starting precise turn to {targetYawAngle:F1}° (current: {transform.eulerAngles.y:F1}°)");
+            return true;
+        }
+        
+        return false;
+    }
+
+    /// <summary>
+    /// Attempts to parse speed control commands.
+    /// Supports formats like: "speed_[percentage]"
+    /// </summary>
+    /// <param name="command">The command string to parse</param>
+    /// <returns>True if the command was a speed control command</returns>
+    private bool TryParseSpeedCommand(string command)
+    {
+        // Pattern: speed_[percentage]
+        if (!command.StartsWith("speed_"))
+            return false;
+
+        string[] parts = command.Split('_');
+        if (parts.Length < 2)
+            return false;
+
+        // Try to parse the speed percentage
+        if (float.TryParse(parts[1], out float speedPercent))
+        {
+            // Clamp speed between 10% and 200%
+            speedPercent = Mathf.Clamp(speedPercent, 10f, 200f);
+            llmSpeedMultiplier = speedPercent / 100f;
+            
+            Debug.Log($"LLM speed multiplier set to {llmSpeedMultiplier:F2} ({speedPercent}%)");
+            return true;
+        }
+        
+        return false;
     }
 
     private void SetCommandDuration(string command)
@@ -929,5 +1215,6 @@ public class DroneController : MonoBehaviour
         public QuaternionDto rotation;
         public float timestamp;
         public float distance;
+        public string command;
     }
 }

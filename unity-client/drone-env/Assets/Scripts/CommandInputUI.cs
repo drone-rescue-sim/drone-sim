@@ -10,6 +10,7 @@ using System.Collections;
 
 /// <summary>
 /// Handles the command input UI for natural language drone control.
+/// Manages UI visibility, input handling, and communication with the LLM service.
 /// </summary>
 public class CommandInputUI : MonoBehaviour
 {
@@ -33,9 +34,9 @@ public class CommandInputUI : MonoBehaviour
 
     private bool isVisible = false;
     private InputAction toggleAction;
-    private static readonly HttpClient textHttpClient = new HttpClient();
+    private static readonly HttpClient httpClient = new HttpClient();
     private const string LLM_SERVICE_URL = "http://127.0.0.1:5006/process_command";
-    
+
     // Static reference for other scripts to check if UI is visible
     public static bool IsUIVisible { get; private set; } = false;
 
@@ -92,6 +93,10 @@ public class CommandInputUI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Toggles the visibility of the command input UI.
+    /// Called when the TAB key is pressed.
+    /// </summary>
     public void ToggleUI()
     {
         if (isVisible)
@@ -100,6 +105,9 @@ public class CommandInputUI : MonoBehaviour
             ShowUI();
     }
 
+    /// <summary>
+    /// Shows the command input UI and focuses the input field.
+    /// </summary>
     public void ShowUI()
     {
         if (commandCanvas != null)
@@ -116,6 +124,9 @@ public class CommandInputUI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Hides the command input UI.
+    /// </summary>
     public void HideUI()
     {
         if (commandCanvas != null)
@@ -126,18 +137,28 @@ public class CommandInputUI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Processes and sends the user's command to the LLM service.
+    /// Clears the input field and hides the UI immediately after sending.
+    /// </summary>
     public void SendCommand()
     {
-        if (commandInput == null || string.IsNullOrEmpty(commandInput.text))
+        if (commandInput == null)
+        {
+            Debug.LogError("❌ commandInput is null!");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(commandInput.text))
         {
             return;
         }
 
         string command = commandInput.text.Trim();
-        commandInput.text = "";
-        HideUI();
+        commandInput.text = ""; // Clear input
+        HideUI(); // Hide UI immediately after sending
 
-        _ = SendToLLMServiceAsync(command);
+        _ = SendToLLMServiceAsync(command); // Send to LLM service for processing
     }
 
     public void StartVoiceRecording()
@@ -243,47 +264,47 @@ public class CommandInputUI : MonoBehaviour
                 audioHttpClient.Timeout = TimeSpan.FromMinutes(6);
                 HttpResponseMessage response = await audioHttpClient.PostAsync(whisperServiceUrl, content);
 
-            if (response.IsSuccessStatusCode)
-            {
-                string responseContent = await response.Content.ReadAsStringAsync();
-                Debug.Log($"Whisper service response: {responseContent}");
-
-                // Parse the response to get the transcribed command
-                var whisperResponse = JsonUtility.FromJson<WhisperResponse>(responseContent);
-                if (whisperResponse != null && !string.IsNullOrEmpty(whisperResponse.transcript))
+                if (response.IsSuccessStatusCode)
                 {
-                    Debug.Log($"Transcribed command: {whisperResponse.transcript}");
-                    
-                    // Log multiple commands if available
-                    if (whisperResponse.commands != null && whisperResponse.commands.Length > 0)
-                    {
-                        Debug.Log($"Generated commands: {string.Join(", ", whisperResponse.commands)}");
-                    }
+                    string responseContent = await response.Content.ReadAsStringAsync();
+                    Debug.Log($"Whisper service response: {responseContent}");
 
-                    // Show the transcribed text in the input field
-                    if (commandInput != null)
+                    // Parse the response to get the transcribed command
+                    var whisperResponse = JsonUtility.FromJson<WhisperResponse>(responseContent);
+                    if (whisperResponse != null && !string.IsNullOrEmpty(whisperResponse.transcript))
                     {
-                        commandInput.text = whisperResponse.transcript;
-                        commandInput.ActivateInputField();
-                    }
+                        Debug.Log($"Transcribed command: {whisperResponse.transcript}");
+                        
+                        // Log multiple commands if available
+                        if (whisperResponse.commands != null && whisperResponse.commands.Length > 0)
+                        {
+                            Debug.Log($"Generated commands: {string.Join(", ", whisperResponse.commands)}");
+                        }
 
-                    // Auto-send the command if transcription confidence is high
-                    if (whisperResponse.confidence > 0.8f)
-                    {
-                        Debug.Log("High confidence transcription, auto-sending command...");
-                        SendCommand();
-                    }
-                    else
-                    {
-                        Debug.Log($"Transcription ready for review (confidence: {whisperResponse.confidence})");
+                        // Show the transcribed text in the input field
+                        if (commandInput != null)
+                        {
+                            commandInput.text = whisperResponse.transcript;
+                            commandInput.ActivateInputField();
+                        }
+
+                        // Auto-send the command if transcription confidence is high
+                        if (whisperResponse.confidence > 0.8f)
+                        {
+                            Debug.Log("High confidence transcription, auto-sending command...");
+                            SendCommand();
+                        }
+                        else
+                        {
+                            Debug.Log($"Transcription ready for review (confidence: {whisperResponse.confidence})");
+                        }
                     }
                 }
-            }
-            else
-            {
-                string errorContent = await response.Content.ReadAsStringAsync();
-                Debug.LogError($"Whisper service error: {errorContent}");
-            }
+                else
+                {
+                    string errorContent = await response.Content.ReadAsStringAsync();
+                    Debug.LogError($"Whisper service error: {errorContent}");
+                }
             } // Close using block for audioHttpClient
         }
         catch (System.Exception e)
@@ -333,6 +354,11 @@ public class CommandInputUI : MonoBehaviour
         return wavData;
     }
 
+    /// <summary>
+    /// Asynchronously sends the command to the LLM service for processing.
+    /// Handles HTTP communication and error logging.
+    /// </summary>
+    /// <param name="command">The natural language command to send</param>
     private async Task SendToLLMServiceAsync(string command)
     {
         try
@@ -343,11 +369,11 @@ public class CommandInputUI : MonoBehaviour
             var payload = new CommandPayload { command = command };
             string jsonPayload = JsonUtility.ToJson(payload);
             Debug.Log($"📤 [LLM] JSON payload: {jsonPayload}");
-            
+
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
 
             Debug.Log($"⏳ [LLM] Waiting for LLM service response...");
-            HttpResponseMessage response = await textHttpClient.PostAsync(LLM_SERVICE_URL, content);
+            HttpResponseMessage response = await httpClient.PostAsync(LLM_SERVICE_URL, content);
 
             Debug.Log($"📊 [LLM] Response status: {response.StatusCode}");
 
@@ -379,14 +405,7 @@ public class CommandInputUI : MonoBehaviour
         catch (System.Exception e)
         {
             Debug.LogError($"💥 [LLM] Failed to send command: {e.Message}");
-            Debug.LogError($"🔍 [LLM] Exception details: {e}");
         }
-    }
-
-    [System.Serializable]
-    private class CommandPayload
-    {
-        public string command;
     }
 
     [System.Serializable]
@@ -403,5 +422,11 @@ public class CommandInputUI : MonoBehaviour
         public string transcript;
         public float confidence;
         public string[] commands;  // For multiple commands
+    }
+
+    [System.Serializable]
+    private class CommandPayload
+    {
+        public string command;
     }
 }

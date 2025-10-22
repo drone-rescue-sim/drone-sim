@@ -58940,6 +58940,13 @@ MonoBehaviour:
   ascendSpeed: 6
   yawSpeed: 120
   accel: 8
+  llmSpeedMultiplier: 1
+  hoverMode: 1
+  enableCollisionDetection: 1
+  collisionCheckDistance: 2
+  collisionLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
   visual: {fileID: 0}
   tiltAmount: 15
   tiltLerp: 10
@@ -60534,7 +60541,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2265357282416060041, guid: 314b13a2c4f89c74299eabc2a4c725c7, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -35.0
+      value: -35
       objectReference: {fileID: 0}
     - target: {fileID: 2265357282416060041, guid: 314b13a2c4f89c74299eabc2a4c725c7, type: 3}
       propertyPath: m_LocalRotation.w
@@ -60824,7 +60831,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2225192008359741194, guid: 87a7b985b15a4244091de35d7df9169a, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -6.0
+      value: -6
       objectReference: {fileID: 0}
     - target: {fileID: 2225192008359741194, guid: 87a7b985b15a4244091de35d7df9169a, type: 3}
       propertyPath: m_LocalPosition.y
