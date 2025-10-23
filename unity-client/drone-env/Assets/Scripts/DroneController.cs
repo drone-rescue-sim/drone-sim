@@ -163,6 +163,13 @@ public class DroneController : MonoBehaviour
 
         // Start HTTP server for LLM commands
         StartHttpServer();
+
+		// Ensure GazeHistoryManager exists early so gaze endpoints work immediately
+		if (GazeHistoryManager.Instance == null)
+		{
+			var mgrGo = new GameObject("GazeHistoryManager");
+			mgrGo.AddComponent<GazeHistoryManager>();
+		}
     }
 
     void OnDestroy()

@@ -138,6 +138,19 @@ public class GazeRayInteractor : MonoBehaviour
         logMessage += $" | Mouse: ({mousePos.x:F0}, {mousePos.y:F0})";
 
         Debug.Log(logMessage);
+
+		// Record this gaze event in history (ensure manager exists)
+		if (GazeHistoryManager.Instance == null)
+		{
+			var mgrGo = new GameObject("GazeHistoryManager");
+			mgrGo.AddComponent<GazeHistoryManager>();
+		}
+		GazeHistoryManager.Instance.AddViewedObject(
+			target,
+			target.transform.position,
+			target.transform.rotation,
+			hit.distance
+		);
     }
 
     /// <summary>
