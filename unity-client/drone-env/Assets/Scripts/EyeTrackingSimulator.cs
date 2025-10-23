@@ -4,11 +4,13 @@ public class EyeTrackingSimulator : MonoBehaviour
 {
     public Camera mainCamera;     
     public GameObject gazeMarker; // En liten sphere som viser blikkpunkt
-    
-    private GameObject _lastDetectedObject; // Track last detected object to avoid spam logging
 
     void Update()
     {
+        // DISABLED: Using GazeRayInteractor instead for advanced gaze tracking
+        // This simple system is kept for reference but disabled to avoid conflicts
+        
+        /*
         Vector3 mousePos = Input.mousePosition;
 
         // Tobii: 
@@ -25,37 +27,20 @@ public class EyeTrackingSimulator : MonoBehaviour
             // Flytt markøren dit
             gazeMarker.transform.position = hit.point;
 
-            // Only log when a new object is detected (not every frame)
-            if (hit.collider.gameObject != _lastDetectedObject)
-            {
-                Debug.Log("Ser på: " + hit.collider.name + " på posisjon: " + hit.collider.transform.position);
-                
-                // Add to gaze history if available
-                if (GazeHistoryManager.Instance != null)
-                {
-                    GazeHistoryManager.Instance.AddViewedObject(hit.collider.gameObject, hit.collider.transform.position, hit.collider.transform.rotation, hit.distance);
-                }
-                else
-                {
-                    // Auto-create GazeHistoryManager if it doesn't exist
-                    Debug.LogWarning("GazeHistoryManager.Instance is null - creating one automatically");
-                    GameObject gazeHistoryGO = new GameObject("GazeHistoryManager");
-                    gazeHistoryGO.AddComponent<GazeHistoryManager>();
-                    
-                    // Try to add the object again
-                    if (GazeHistoryManager.Instance != null)
-                    {
-                        GazeHistoryManager.Instance.AddViewedObject(hit.collider.gameObject, hit.collider.transform.position, hit.collider.transform.rotation, hit.distance);
-                    }
-                }
-                
-                _lastDetectedObject = hit.collider.gameObject;
-            }
+            // Clean console logging
+            Debug.Log($"👁️ Looking at: {hit.collider.name} | Distance: {hit.distance:F1}m | Position: {hit.point}");
+
         }
-        else
+        */
+        
+        // Still update the visual marker position for visual feedback
+        Vector3 mousePos = Input.mousePosition;
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+        
+        if (Physics.Raycast(ray, out hit))
         {
-            // Clear the last detected object when raycast misses
-            _lastDetectedObject = null;
+            gazeMarker.transform.position = hit.point;
         }
     }
 }
