@@ -108,7 +108,6 @@ curl -X POST http://127.0.0.1:5006/process_command -H "Content-Type: application
 drone-sim/
 ├── services/llm/          # LLM and voice processing
 ├── services/detection/    # Object detection
-├── services/tobii/        # Gaze tracking
 ├── unity-client/drone-env/ # Unity project
 ├── requirements.txt      # Python dependencies
 ├── config.env           # Environment configuration
@@ -131,7 +130,6 @@ drone-sim/
 - `services/llm/http_service.py` - Main Flask server for voice/text processing (533 lines)
 - `services/llm/main.py` - LLM command processing logic (311 lines)
 - `services/detection/main.py` - YOLO object detection (71 lines)
-- `services/tobii/http_service.py` - Tobii gaze tracking API (132 lines)
 - `start.py` - Service startup script (405 lines)
 
 ### Configuration & Data

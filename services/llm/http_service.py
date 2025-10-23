@@ -31,12 +31,12 @@ def query_gaze_history(tag):
                 raw = response.text
                 data = response.json()
             except Exception:
-                print(f"❌ Failed to parse gaze history JSON for tag '{tag}': {response.text[:200]}")
+                print(f"Failed to parse gaze history JSON for tag '{tag}': {response.text[:200]}")
                 return None
             if isinstance(data, dict) and data.get('found') is False:
-                print(f"ℹ️ query_gaze_history('{tag}') -> found=false")
+                print(f"query_gaze_history('{tag}') -> found=false")
                 return None
-            print(f"🔎 query_gaze_history('{tag}') -> HTTP 200, keys={list(data.keys())}, raw={raw[:200]}")
+            print(f"query_gaze_history('{tag}') -> HTTP 200, keys={list(data.keys())}, raw={raw[:200]}")
             return data
         else:
             print(f"Error querying gaze history: HTTP {response.status_code}")
@@ -52,7 +52,7 @@ def query_gaze_history_by_name(object_name):
     """
     try:
         url = f"{UNITY_URL}gaze_history_by_name?name={object_name}"
-        print(f"🔍 Searching for object: '{object_name}' at URL: {url}")
+        print(f"Searching for object: '{object_name}' at URL: {url}")
         response = requests.get(url, timeout=5)
         
         if response.status_code == 200:
@@ -60,19 +60,19 @@ def query_gaze_history_by_name(object_name):
                 raw = response.text
                 data = response.json()
             except Exception:
-                print(f"❌ Failed to parse gaze history-by-name JSON for '{object_name}': {response.text[:200]}")
+                print(f"Failed to parse gaze history-by-name JSON for '{object_name}': {response.text[:200]}")
                 return None
             if isinstance(data, dict) and data.get('found') is False:
-                print(f"ℹ️ query_gaze_history_by_name('{object_name}') -> found=false")
+                print(f"query_gaze_history_by_name('{object_name}') -> found=false")
                 return None
-            print(f"🔎 query_gaze_history_by_name('{object_name}') -> HTTP 200, keys={list(data.keys())}, raw={raw[:200]}")
+            print(f"query_gaze_history_by_name('{object_name}') -> HTTP 200, keys={list(data.keys())}, raw={raw[:200]}")
             return data
         else:
-            print(f"❌ Error querying gaze history by name: HTTP {response.status_code}")
+            print(f" Error querying gaze history by name: HTTP {response.status_code}")
             return None
             
     except requests.exceptions.RequestException as e:
-        print(f"❌ Error connecting to Unity for gaze history by name: {e}")
+        print(f" Error connecting to Unity for gaze history by name: {e}")
         return None
 
 def _extract_position(gaze_payload):
@@ -212,7 +212,7 @@ def process_navigation_command(commands):
                             if sc > best_score:
                                 best, best_score = obj, sc
                         if best and best_score >= 3:
-                            print(f"🔎 Fuzzy matched '{object_type}' to recent object '{best.get('name')}' (score {best_score})")
+                            print(f" Fuzzy matched '{object_type}' to recent object '{best.get('name')}' (score {best_score})")
                             gaze_data = best
 
                 if gaze_data:
@@ -544,7 +544,7 @@ def process_command():
             return jsonify({'error': 'Failed to generate valid commands'}), 500
 
     except Exception as e:
-        print(f"❌ Error processing command: {e}")
+        print(f" Error processing command: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/process_audio_command', methods=['POST'])
@@ -567,8 +567,8 @@ def process_audio_command():
 
         try:
             # Process audio with Whisper (using whisper command line)
-            print("🎤 Processing audio with Whisper...")
-            print(f"📁 Audio file: {temp_audio_path}")
+            print(" Processing audio with Whisper...")
+            print(f" Audio file: {temp_audio_path}")
 
             # Check file size
             import os
@@ -576,7 +576,7 @@ def process_audio_command():
             print(f"📊 Audio file size: {file_size} bytes")
 
             # Run whisper via Python module runner to avoid PATH issues on Windows
-            print("🚀 Starting Whisper transcription (this may take a while on first run)...")
+            print(" Starting Whisper transcription (this may take a while on first run)...")
             result = subprocess.run([
                 sys.executable, '-m', 'whisper', temp_audio_path,
                 '--model', 'tiny',
@@ -586,11 +586,11 @@ def process_audio_command():
             ], capture_output=True, text=True, timeout=300)
 
             if result.returncode != 0:
-                print(f"❌ Whisper error: {result.stderr}")
-                print(f"🔍 Whisper stdout: {result.stdout}")
+                print(f" Whisper error: {result.stderr}")
+                print(f" Whisper stdout: {result.stdout}")
                 return jsonify({'error': 'Whisper processing failed'}), 500
 
-            print("✅ Whisper command completed successfully")
+            print(" Whisper command completed successfully")
             print(f"📝 Whisper stdout: {result.stdout[:200]}...")  # First 200 chars
 
             # Parse Whisper output
@@ -673,14 +673,14 @@ def process_audio_command():
 
     except subprocess.TimeoutExpired:
         print("⏰ Audio processing timed out after 5 minutes")
-        print("💡 This usually happens on first run when downloading the Whisper model")
-        print("🔄 Try again in a few minutes once the model is cached")
+        print(" This usually happens on first run when downloading the Whisper model")
+        print(" Try again in a few minutes once the model is cached")
         return jsonify({
             'error': 'Audio processing timeout - model may be downloading',
             'hint': 'Try again in a few minutes'
         }), 408
     except Exception as e:
-        print(f"❌ Error processing audio: {e}")
+        print(f" Error processing audio: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/health', methods=['GET'])
@@ -744,21 +744,21 @@ def test_llm():
         }), 500
 
 if __name__ == '__main__':
-    print("🚀 Starting Drone LLM HTTP Service...")
+    print(" Starting Drone LLM HTTP Service...")
     
     # Import and show LLM provider info
     from main import LLM_PROVIDER, OPENAI_MODEL, OLLAMA_MODEL, OPENAI_API_KEY
-    print(f"🔧 LLM Provider: {LLM_PROVIDER.upper()}")
+    print(f" LLM Provider: {LLM_PROVIDER.upper()}")
     if LLM_PROVIDER.lower() == "openai":
-        print(f"🤖 OpenAI Model: {OPENAI_MODEL}")
+        print(f" OpenAI Model: {OPENAI_MODEL}")
         if not OPENAI_API_KEY:
-            print("⚠️  Warning: OPENAI_API_KEY not set. Set it as environment variable.")
+            print("  Warning: OPENAI_API_KEY not set. Set it as environment variable.")
     else:
-        print(f"🤖 Ollama Model: {OLLAMA_MODEL}")
+        print(f" Ollama Model: {OLLAMA_MODEL}")
     
     print("📡 Listening on http://127.0.0.1:5006")
     print("📝 Text commands: POST /process_command")
-    print("🎤 Audio commands: POST /process_audio_command")
+    print(" Audio commands: POST /process_audio_command")
     print("💚 Health check: GET /health")
     print("🧪 Test LLM: GET /test_llm")
     print("-" * 50)
