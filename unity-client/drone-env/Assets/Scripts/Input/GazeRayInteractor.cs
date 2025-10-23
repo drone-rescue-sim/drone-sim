@@ -215,6 +215,16 @@ public class GazeRayInteractor : MonoBehaviour
                 }
             }
 
+            // 7b: Handle real mouse left-click to trigger interaction
+            if (Input.GetMouseButtonDown(0))
+            {
+                Debug.Log($"🖱️ Mouse click! Current target: {(_currentTarget != null ? _currentTarget.name : "null")}");
+                if (_currentTarget != null)
+                {
+                    _currentTarget.SendMessage("OnGazeClick", SendMessageOptions.DontRequireReceiver);
+                }
+            }
+
             // Dwell click (optional)
             if (dwellTime > 0f)
             {
