@@ -24,14 +24,26 @@ public class GazeInteractable : MonoBehaviour
 
     private Color _originalColor;
     private bool _hasColorProperty;
+    private string _colorPropertyName; // Supports both _Color and _BaseColor (URP/HDRP)
 
     void Awake()
     {
         if (!targetRenderer) targetRenderer = GetComponentInChildren<Renderer>();
-        if (targetRenderer && targetRenderer.material && targetRenderer.material.HasProperty("_Color"))
+        if (targetRenderer && targetRenderer.material)
         {
-            _originalColor = targetRenderer.material.color;
-            _hasColorProperty = true;
+            var mat = targetRenderer.material;
+            if (mat.HasProperty("_Color"))
+            {
+                _colorPropertyName = "_Color";
+                _originalColor = mat.GetColor(_colorPropertyName);
+                _hasColorProperty = true;
+            }
+            else if (mat.HasProperty("_BaseColor"))
+            {
+                _colorPropertyName = "_BaseColor";
+                _originalColor = mat.GetColor(_colorPropertyName);
+                _hasColorProperty = true;
+            }
         }
     }
 
@@ -39,14 +51,14 @@ public class GazeInteractable : MonoBehaviour
     void OnGazeEnter()
     {
         // Highlight the object in yellow to show it's being looked at
-        if (_hasColorProperty) targetRenderer.material.color = highlightColor;
+        if (_hasColorProperty) targetRenderer.material.SetColor(_colorPropertyName, highlightColor);
     }
 
     // Called when user stops looking at this object
     void OnGazeExit()
     {
         // Return object to its original color
-        if (_hasColorProperty) targetRenderer.material.color = _originalColor;
+        if (_hasColorProperty) targetRenderer.material.SetColor(_colorPropertyName, _originalColor);
     }
 
     // Called when user "clicks" on this object (presses Spacebar while looking at it)
@@ -77,11 +89,11 @@ public class GazeInteractable : MonoBehaviour
     private System.Collections.IEnumerator ColorFlash()
     {
         Color flashColor = Color.white;
-        targetRenderer.material.color = flashColor;
+        if (_hasColorProperty) targetRenderer.material.SetColor(_colorPropertyName, flashColor);
         yield return new WaitForSeconds(0.1f);
-        targetRenderer.material.color = highlightColor;
+        if (_hasColorProperty) targetRenderer.material.SetColor(_colorPropertyName, highlightColor);
         yield return new WaitForSeconds(0.1f);
-        targetRenderer.material.color = _originalColor;
+        if (_hasColorProperty) targetRenderer.material.SetColor(_colorPropertyName, _originalColor);
     }
     
     private System.Collections.IEnumerator RotationWiggle()
