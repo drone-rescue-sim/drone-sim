@@ -38,8 +38,8 @@ def call_ollama(system_prompt: str, user_input: str) -> str | None:
             return res
         return None
     except Exception as e:
-        print(f"❌ Error calling Ollama: {e}")
-        print("💡 Make sure Ollama is running and the model is available:")
+        print(f"Error calling Ollama: {e}")
+        print("Make sure Ollama is running and the model is available:")
         print("   ollama serve")
         print(f"   ollama pull {OLLAMA_MODEL}")
         return None
@@ -49,7 +49,7 @@ def call_openai(system_prompt: str, user_input: str) -> str | None:
     """Call OpenAI Chat Completions API and return content string."""
     try:
         if not OPENAI_API_KEY:
-            print("❌ OpenAI API key not found. Set OPENAI_API_KEY environment variable.")
+            print("OpenAI API key not found. Set OPENAI_API_KEY environment variable.")
             return None
 
         headers = {
@@ -83,8 +83,8 @@ def call_openai(system_prompt: str, user_input: str) -> str | None:
             data = resp.json()
             return data.get("choices", [{}])[0].get("message", {}).get("content")
         else:
-            print(f"❌ OpenAI API error: {resp.status_code}")
-            print(f"📄 Response: {resp.text}")
+            print(f"OpenAI API error: {resp.status_code}")
+            print(f"Response: {resp.text}")
             return None
     except Exception as e:
         print(f"Error calling OpenAI: {e}")
@@ -126,14 +126,14 @@ Examples:
 
         # Select provider
         if LLM_PROVIDER.lower() == "openai":
-            print(f"🤖 Using OpenAI ({OPENAI_MODEL})")
+            print(f"Using OpenAI ({OPENAI_MODEL})")
             instructions = call_openai(system_prompt, user_input)
         else:
-            print(f"🤖 Using Ollama ({OLLAMA_MODEL})")
+            print(f"Using Ollama ({OLLAMA_MODEL})")
             instructions = call_ollama(system_prompt, user_input)
 
         if not instructions:
-            print("❌ Failed to get response from LLM; using fallback 'stop'")
+            print("Failed to get response from LLM; using fallback 'stop'")
             return ["stop"]
 
         command_text = instructions.strip()
@@ -183,41 +183,41 @@ def send_to_unity(commands: str | list[str]) -> bool:
         headers = {"Content-Type": "application/json"}
         r = requests.post(UNITY_URL, json=payload, headers=headers, timeout=5.0)
         if r.status_code == 200:
-            print(f"✓ Sent commands to Unity: {commands}")
+            print(f"Sent commands to Unity: {commands}")
             return True
-        print(f"✗ Unity responded with status code {r.status_code}: {r.text}")
+        print(f"Unity responded with status code {r.status_code}: {r.text}")
         return False
     except requests.exceptions.ConnectionError:
-        print("✗ Cannot connect to Unity. Make sure Unity is running and the HTTP server is started.")
+        print("Cannot connect to Unity. Make sure Unity is running and the HTTP server is started.")
         return False
     except requests.exceptions.Timeout:
-        print("✗ Request to Unity timed out.")
+        print("Request to Unity timed out.")
         return False
     except Exception as e:
-        print(f"✗ Error sending to Unity: {e}")
+        print(f"Error sending to Unity: {e}")
         return False
 
 
 def test_llm_connection() -> bool:
-    print("🧪 Testing LLM connection...")
+    print("Testing LLM connection...")
     result = get_drone_instructions("move forward")
     ok = bool(result and result != ["stop"])
-    print("✅ LLM connection successful!" if ok else "❌ LLM connection failed!")
+    print("LLM connection successful!" if ok else "LLM connection failed!")
     return ok
 
 
 def main():
-    print("🤖 Drone Control LLM Service Started")
-    print(f"🔧 LLM Provider: {LLM_PROVIDER.upper()}")
+    print("Drone Control LLM Service Started")
+    print(f"LLM Provider: {LLM_PROVIDER.upper()}")
     if LLM_PROVIDER.lower() == "openai":
-        print(f"🤖 OpenAI Model: {OPENAI_MODEL}")
+        print(f"OpenAI Model: {OPENAI_MODEL}")
         if not OPENAI_API_KEY:
-            print("⚠️  Warning: OPENAI_API_KEY not set. Set it as environment variable.")
+            print("Warning: OPENAI_API_KEY not set. Set it as environment variable.")
     else:
-        print(f"🤖 Ollama Model: {OLLAMA_MODEL}")
+        print(f"Ollama Model: {OLLAMA_MODEL}")
 
     if not test_llm_connection():
-        print("💡 Please check your LLM configuration and try again.")
+        print("Please check your LLM configuration and try again.")
 
 
 if __name__ == "__main__":

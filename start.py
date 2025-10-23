@@ -18,7 +18,6 @@ class DroneServices:
         self.project_root = Path(__file__).parent
         self.llm_process = None
         self.ollama_process = None
-        self.tobii_process = None
 
     def print_status(self, message: str, color: str = "green"):
         """Print colored status message"""
@@ -213,44 +212,6 @@ class DroneServices:
         finally:
             os.chdir(self.project_root)
 
-    def start_tobii_service(self):
-        """Start the Tobii HTTP service"""
-        self.print_status("Starting Tobii HTTP Service...")
-        try:
-            # Quick import check in this interpreter for clearer error message
-            try:
-                import tobii_research  # noqa: F401
-            except Exception as e:
-                self.print_status(" Tobii SDK not available: install 'tobii_research'", "red")
-                self.print_status(f"  Error: {e}", "yellow")
-                return False
-
-            os.chdir(self.project_root / "services" / "tobii")
-            self.tobii_process = subprocess.Popen([sys.executable, 'http_service.py'])
-
-            start_time = time.time()
-            last_error = None
-            while time.time() - start_time < 20:
-                try:
-                    r = requests.get("http://127.0.0.1:5007/health", timeout=2)
-                    if r.status_code == 200:
-                        self.print_status(" Tobii HTTP Service started")
-                        return True
-                except Exception as e:
-                    last_error = e
-                if self.tobii_process.poll() is not None:
-                    break
-                time.sleep(1)
-
-            self.print_status(" Tobii service did not become ready in time", "red")
-            if last_error:
-                self.print_status(f"  Last error: {last_error}", "yellow")
-            return False
-        except Exception as e:
-            self.print_status(f" Failed to start Tobii service: {e}", "red")
-            return False
-        finally:
-            os.chdir(self.project_root)
 
     def stop_services(self):
         """Stop all running services"""
@@ -274,14 +235,6 @@ class DroneServices:
                 self.ollama_process.kill()
                 self.print_status(" Ollama force killed")
 
-        if self.tobii_process:
-            try:
-                self.tobii_process.terminate()
-                self.tobii_process.wait(timeout=5)
-                self.print_status(" Tobii service stopped")
-            except:
-                self.tobii_process.kill()
-                self.print_status(" Tobii service force killed")
 
     def show_status(self):
         """Show current service status"""
@@ -317,7 +270,6 @@ class DroneServices:
         print("   LLM Service:     http://127.0.0.1:5006")
         print("   Unity Control:   http://127.0.0.1:5005")
         print("   Ollama API:      http://127.0.0.1:11434")
-        print("   Tobii Service:   http://127.0.0.1:5007")
 
     def run(self):
         """Main run function"""
@@ -343,8 +295,6 @@ class DroneServices:
         if success and not self.start_llm_service():
             success = False
 
-        if success and not self.start_tobii_service():
-            self.print_status(" Tobii service optional: continuing without it", "yellow")
 
         if success:
             print("\n" + "="*60)
