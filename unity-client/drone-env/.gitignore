@@ -103,3 +103,13 @@ __pycache__/
 *.pyc
 .venv/
 .env
+
+# --- YOLO / ML ---
+*.pt
+*.pth
+*.onnx
+*.tflite
+*.engine
+*.weights
+runs/               # YOLO training outputs
+datasets/           # large datasets (optional, if you don't want them in repo)
