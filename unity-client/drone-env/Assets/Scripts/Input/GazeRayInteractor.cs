@@ -63,6 +63,18 @@ public class GazeRayInteractor : MonoBehaviour
     private RaycastHit _lastHit; // Store last hit for gizmos and distance
 
     /// <summary>
+    /// Resolve the GameObject that should receive gaze events by preferring
+    /// a parent which contains a GazeInteractable component. This ensures
+    /// clicks/highlights affect the logical object, not just a mesh child.
+    /// </summary>
+    private GameObject ResolveInteractionTarget(GameObject raw)
+    {
+        if (raw == null) return null;
+        var interactable = raw.GetComponentInParent<GazeInteractable>();
+        return interactable != null ? interactable.gameObject : raw;
+    }
+
+    /// <summary>
     /// Checks if the given GameObject should be ignored for hover logging.
     /// </summary>
     private bool ShouldIgnoreObject(GameObject target)
@@ -183,14 +195,16 @@ public class GazeRayInteractor : MonoBehaviour
             
             // 5: Handle gaze enter/exit events
             // When we start looking at a new object, trigger events
-            if (hit.collider.gameObject != _currentTarget)
+            var hitObject = hit.collider.gameObject;
+            var resolvedTarget = ResolveInteractionTarget(hitObject);
+            if (resolvedTarget != _currentTarget)
             {
                 // Tell previous object we're no longer looking at it
                 if (_currentTarget)
                     _currentTarget.SendMessage("OnGazeExit", SendMessageOptions.DontRequireReceiver);
 
                 // Set new target and tell it we're now looking at it
-                _currentTarget = hit.collider.gameObject;
+                _currentTarget = resolvedTarget;
                 _currentTarget.SendMessage("OnGazeEnter", SendMessageOptions.DontRequireReceiver);
 
                 // 6: Log what we're looking at with distance and mouse position
