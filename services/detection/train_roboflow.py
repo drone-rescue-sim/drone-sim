@@ -42,9 +42,9 @@ def train(
     if best_path.exists():
         dst = Path(__file__).parent / "best.pt"
         shutil.copy2(best_path, dst)
-        print(f"\n✅ Best weights copied to: {dst}")
+        print(f"\n Best weights copied to: {dst}")
     else:
-        print("\n⚠️ Could not find best.pt under runs; skipping copy.")
+        print("\nCould not find best.pt under runs; skipping copy.")
 
     print("\nTraining complete.")
     return results
