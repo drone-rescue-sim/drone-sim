@@ -1,6 +1,8 @@
 # Drone Simulation with AI-Powered Control
 
-Unity-based drone simulation with voice control, natural language processing, and object detection.
+Unity-based drone simulation with voice control, natural language processing and object detection.
+
+The object Detection is partly shown in main branch and is further enhanced in the Object-Detection branch, but due to time limits it is not fully integrated into the rest of the project.
 
 ## Prerequisites
 
